@@ -1,0 +1,1425 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Game kuis edukasi: rebut koin sebagai ikan, jawab soal buatan guru, dan hindari predator. Main 1-4 pemain di HP, tablet, atau komputer.">
+<meta name="theme-color" content="#04202f">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Mafaza Kuis">
+<meta property="og:locale" content="id_ID">
+<meta property="og:title" content="KOIN IKAN | Mafaza Kuis">
+<meta property="og:description" content="Game kuis edukasi: rebut koin sebagai ikan, jawab soal buatan guru, dan hindari predator. Main 1-4 pemain di HP, tablet, atau komputer.">
+<meta property="og:url" content="https://mafaza-id.github.io/koin-ikan/">
+<meta property="og:image" content="https://mafaza-id.github.io/koin-ikan/og-image.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Logo Mafaza Kuis">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="KOIN IKAN | Mafaza Kuis">
+<meta name="twitter:description" content="Game kuis edukasi: rebut koin sebagai ikan, jawab soal buatan guru, dan hindari predator. Main 1-4 pemain di HP, tablet, atau komputer.">
+<meta name="twitter:image" content="https://mafaza-id.github.io/koin-ikan/og-image.jpg">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="favicon.png">
+<style>html,body{margin:0;padding:0}</style>
+<title>KOIN IKAN | Mafaza Kuis</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Layout: laut animasi sebagai latar penuh; semua panel berupa permukaan kaca gelap yang tenang dengan satu aksen teal. Menu dua kolom (pemain | soal dan pengaturan), HUD berupa satu bar tipis, kartu soal di tengah atas. */
+:root{
+  --deep:#04202f; --surface:rgba(6,23,36,.9); --surface-2:rgba(255,255,255,.045); --surface-3:rgba(255,255,255,.09);
+  --line:rgba(255,255,255,.11); --line-strong:rgba(255,255,255,.22);
+  --text:#e8f2f7; --muted:#98b2c1; --accent:#36d1c4; --accent-ink:#03211e; --coin:#f5b83d;
+  --good:#34d399; --bad:#f87171; --pc:#36d1c4;
+  --font:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --r:12px; --r-lg:18px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;overflow:hidden;background:var(--deep);color:var(--text);font-family:var(--font);font-weight:500;font-size:15px;line-height:1.5;
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+#app{position:relative;width:100%;height:100%;overflow:hidden}
+#c{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* tombol */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:44px;padding:.6rem 1.15rem;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface-3);color:var(--text);font-weight:700;font-size:.95rem;transition:background .15s,border-color .15s}
+.btn:hover{background:rgba(255,255,255,.14)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:800}
+.btn.primary:hover{background:#5fe0d5}
+.btn.ghost{background:transparent}
+.btn.ghost:hover{background:var(--surface-3)}
+.btn.lg{min-height:52px;padding:.75rem 1.7rem;font-size:1.05rem}
+.btn:active{transform:translateY(1px)}
+.del{min-height:44px;padding:.5rem 1rem;border-radius:10px;border:1px solid rgba(248,113,113,.5);color:var(--bad);background:transparent;font-weight:700}
+.del:hover{background:rgba(248,113,113,.12)}
+.sel{min-height:44px;border:1px solid var(--line-strong);background:rgba(0,0,0,.28);border-radius:10px;padding:.5rem .8rem;width:100%}
+select.sel{appearance:none;-webkit-appearance:none;padding-right:2.2rem;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1.5l5 5 5-5' fill='none' stroke='%2398b2c1' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>");background-repeat:no-repeat;background-position:right .8rem center}
+.sel option{color:#000}
+input.sel{-webkit-user-select:text;user-select:text}
+
+/* layar penuh dan panel */
+.screen{position:absolute;inset:0;display:flex;overflow:auto;padding:20px max(16px,env(safe-area-inset-left,0px)) 20px;background:rgba(2,18,30,.62)}
+.sheet{width:min(1000px,100%);margin:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:clamp(18px,3vw,32px);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.sheet.small{width:min(440px,100%);text-align:center}
+.sheet.edit{width:min(760px,100%)}
+.brand{display:flex;gap:14px;align-items:center;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.sticker{flex:none;height:92px;width:auto;transform:rotate(-4deg);filter:drop-shadow(0 4px 10px rgba(0,0,0,.45))}
+@media (max-width:520px){.sticker{height:68px}}
+.logo{flex:none;width:48px;height:48px;border-radius:12px;background:var(--surface-3);border:1px solid var(--line-strong);display:grid;place-items:center}
+h1,h2,h3{margin:0;font-weight:800;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:clamp(1.5rem,4vw,2rem);line-height:1.15}
+h2{font-size:1.4rem;line-height:1.2}
+.sub{margin:.25rem 0 0;color:var(--muted);max-width:62ch;font-size:.95rem}
+.sheet.small .sub,.sheet.edit>.sub{margin:.4rem 0 0}
+.cols{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:28px;margin-top:22px}
+@media (max-width:860px){.cols{grid-template-columns:1fr;gap:4px}}
+.sec{display:block;padding-bottom:20px}
+.lbl{display:block;font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+.sec+.sec{border-top:1px solid var(--line);padding-top:20px}
+@media (min-width:861px){.cols .sec+.sec{border-top:0;padding-top:0}.cols>div>.sec+.sec{border-top:1px solid var(--line);padding-top:20px}}
+
+.seg{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line-strong);border-radius:10px;overflow:hidden}
+.seg button{min-height:44px;border:0;border-right:1px solid var(--line);background:transparent;font-weight:700;font-size:.9rem;color:var(--muted)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:800}
+.seg button:not([aria-pressed="true"]):hover{background:var(--surface-3);color:var(--text)}
+
+.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+.pcard{position:relative;border:1px solid var(--line);border-radius:var(--r);padding:10px 10px 12px;background:var(--surface-2);transition:opacity .2s,border-color .2s}
+.pcard::before{content:"";position:absolute;left:10px;right:10px;top:0;height:3px;border-radius:0 0 3px 3px;background:var(--pc)}
+.pcard.off{opacity:.3;pointer-events:none}
+.pcard canvas{display:block;width:100%;height:64px}
+.pcard input{width:100%;min-height:38px;margin-top:6px;border:1px solid var(--line-strong);background:rgba(0,0,0,.28);border-radius:8px;padding:.35rem .6rem;font-weight:700;-webkit-user-select:text;user-select:text}
+.pcard small{display:block;margin-top:6px;color:var(--muted);font-size:.78rem;line-height:1.35}
+
+.field{display:grid;gap:6px;margin-bottom:14px}
+.field>span{font-size:.85rem;font-weight:600}
+.note{margin:8px 0 0;color:var(--muted);font-size:.84rem}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:46px;padding:.4rem .2rem .4rem .1rem;border:0;background:transparent;font-weight:600;text-align:left}
+.switch::after{content:"";flex:none;width:42px;height:24px;border-radius:999px;background:var(--line-strong);background-image:radial-gradient(circle at 12px 12px,#fff 9px,transparent 10px);background-repeat:no-repeat;transition:background-color .15s}
+.switch[aria-pressed="true"]::after{background-color:var(--accent);background-image:radial-gradient(circle at 30px 12px,#fff 9px,transparent 10px)}
+.switch+.switch{border-top:1px solid var(--line)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px}
+.footbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;border-top:1px solid var(--line);margin-top:6px;padding-top:20px}
+.help{margin:12px 0 0;color:var(--muted);font-size:.84rem;line-height:1.55}
+.msg{min-height:1.4em;font-size:.88rem;margin-top:12px;color:var(--accent);font-weight:600}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.row .field{margin:0;flex:1 1 180px}
+
+/* HUD */
+#hud{position:absolute;left:0;right:0;top:0;pointer-events:none;padding:10px max(10px,env(safe-area-inset-left,0px)) 0}
+.hudtop{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:.3rem .8rem;display:flex;flex-direction:column;justify-content:center;min-width:76px}
+.stat small{font-size:.66rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);line-height:1.2}
+.stat b{font-size:1.3rem;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.2}
+#chips{display:flex;gap:8px;flex-wrap:wrap;flex:1 1 220px}
+.chip{display:grid;grid-template-columns:1fr auto;grid-template-areas:"n b" "i i" "s s";column-gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:.3rem .7rem .4rem;min-width:132px;position:relative;overflow:hidden}
+.chip::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--pc)}
+.chip .n{grid-area:n;font-size:.8rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px}
+.chip b{grid-area:b;font-size:1.25rem;font-weight:800;font-variant-numeric:tabular-nums;margin:0}
+.chip i{grid-area:i;display:block;height:4px;border-radius:2px;background:rgba(255,255,255,.14);margin:2px 0 3px;overflow:hidden}
+.chip u{display:block;height:100%;background:var(--pc);text-decoration:none}
+.chip .s{grid-area:s;font-size:.7rem;color:var(--muted);font-weight:600;min-height:1em}
+.hbtns{display:flex;gap:6px;pointer-events:auto;align-items:stretch}
+.ib{min-height:44px;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:.3rem .85rem;font-weight:700;font-size:.82rem}
+.ib:hover{background:#0b2a3f}
+
+/* kartu soal */
+#quizdock{position:absolute;left:0;right:0;bottom:0;display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-end;gap:8px;padding:0 max(10px,env(safe-area-inset-left,0px)) max(10px,env(safe-area-inset-bottom,0px));pointer-events:none}
+.card{position:relative;flex:1 1 0;min-width:min(100%,170px);max-width:600px;pointer-events:auto;
+  background:rgba(6,23,36,.7);border:1px solid var(--line-strong);border-radius:var(--r-lg);padding:12px 12px 10px;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.card::before{content:"";position:absolute;left:14px;right:14px;top:0;height:3px;border-radius:0 0 3px 3px;background:var(--pc)}
+.qhead{display:flex;justify-content:space-between;gap:8px;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.qhead .qwho{color:var(--text);display:inline-flex;align-items:center;gap:8px}
+.qhead .qwho::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--pc)}
+.qtext{font-size:1.02rem;line-height:1.35;margin:.45rem 0 .65rem;font-weight:700}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:6px}
+.dock-multi .qtext{font-size:.92rem}
+@media (max-width:480px){.qtext{font-size:.92rem}}
+.opt{display:flex;align-items:center;gap:8px;text-align:left;border:1px solid var(--line-strong);background:rgba(255,255,255,.06);border-radius:10px;padding:.35rem .55rem;min-height:38px;font-weight:600;font-size:.9rem;line-height:1.25}
+.opt .k{flex:none;width:24px;height:24px;border-radius:7px;background:var(--surface-3);display:grid;place-items:center;font-size:.75rem;font-weight:800}
+.opt:hover:not(:disabled){background:var(--surface-3);border-color:var(--accent)}
+.opt.good{background:rgba(52,211,153,.22);border-color:var(--good)}
+.opt.good .k{background:var(--good);color:#04231a}
+.opt.bad{background:rgba(248,113,113,.22);border-color:var(--bad)}
+.opt.bad .k{background:var(--bad);color:#2a0606}
+.opt:disabled{cursor:default;color:var(--text)}
+.fb{min-height:1.3em;margin:.5rem 0 0;font-weight:700;font-size:.82rem}
+
+/* editor */
+.ed-item{border:1px solid var(--line);border-radius:var(--r);padding:12px;margin:12px 0;background:var(--surface-2)}
+.ed-item textarea,.ed-item input[type=text]{width:100%;min-height:40px;border:1px solid var(--line-strong);background:rgba(0,0,0,.28);border-radius:8px;padding:.45rem .65rem;-webkit-user-select:text;user-select:text}
+.ed-item textarea{resize:vertical;min-height:56px}
+.ed-opt{display:flex;gap:10px;align-items:center;margin-top:8px}
+.ed-opt input[type=radio]{width:20px;height:20px;accent-color:var(--accent);flex:none}
+.ed-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-weight:700;font-size:.9rem}
+.ed-item .del{min-height:36px;padding:.25rem .8rem;font-size:.85rem}
+.edsec{border-top:1px solid var(--line);margin-top:20px;padding-top:20px}
+ol.rank{list-style:none;padding:0;margin:1.2rem 0;display:grid;gap:8px;text-align:left}
+ol.rank li{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-left:4px solid var(--pc);border-radius:10px;padding:.6rem .9rem;background:var(--surface-2)}
+ol.rank li strong{font-weight:700;flex:1}
+ol.rank li em{font-style:normal;font-weight:800;font-size:1.35rem;font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+</head>
+<body>
+<div id="app">
+  <canvas id="c" aria-label="Area permainan ikan"></canvas>
+
+  <div id="hud" hidden>
+    <div class="hudtop">
+      <div class="stat"><small>Waktu</small><b id="timer">3:00</b></div>
+      <div class="stat"><small>Predator</small><b id="pred">0</b></div>
+      <div id="chips"></div>
+      <div class="hbtns">
+        <button id="bPause" class="ib" type="button">Jeda</button>
+        <button id="bMusic" class="ib" type="button">Suara laut: On</button>
+        <button id="bFx" class="ib" type="button">Efek: On</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="quizdock"></div>
+
+  <div id="menu" class="screen">
+    <div class="sheet">
+      <div class="brand">
+        <img class="sticker" src="logo.png" alt="Logo Mafaza Kuis" width="88" height="88">
+        <div>
+          <h1>KOIN IKAN</h1>
+          <p class="sub">Game kuis edukasi dari Mafaza Kuis. Berenang, rebut koin, jawab soal dari guru, dan jadilah ikan terbesar di laut. Main 1 sampai 4 pemain.</p>
+        </div>
+      </div>
+
+      <div class="cols">
+        <div>
+          <div class="sec">
+            <span class="lbl">Jumlah pemain</span>
+            <div class="seg" id="segPlayers">
+              <button type="button" data-n="1">1 Pemain</button>
+              <button type="button" data-n="2">2 Pemain</button>
+              <button type="button" data-n="3">3 Pemain</button>
+              <button type="button" data-n="4">4 Pemain</button>
+            </div>
+          </div>
+          <div class="sec">
+            <span class="lbl">Karakter ikan</span>
+            <div class="pgrid" id="pgrid"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="sec">
+            <span class="lbl">Soal</span>
+            <label class="field" for="selSource"><span>Soal dari siapa</span>
+              <select id="selSource" class="sel"></select>
+            </label>
+            <div class="note" id="srcNote"></div>
+            <div class="actions" style="margin-top:12px"><button id="bEdit" class="btn ghost" type="button"><span>Atur soal guru (<span id="qCount">0</span>)</span></button></div>
+          </div>
+          <div class="sec">
+            <span class="lbl">Pengaturan</span>
+            <label class="field" for="selTime"><span>Lama permainan</span>
+              <select id="selTime" class="sel">
+                <option value="2">2 menit</option><option value="3">3 menit</option>
+                <option value="5">5 menit</option><option value="10">10 menit</option>
+              </select>
+            </label>
+            <button id="tMusic" class="switch tg" type="button" aria-pressed="true">Suara laut: Nyala</button>
+            <button id="tFx" class="switch tg" type="button" aria-pressed="true">Efek: Nyala</button>
+          </div>
+          <div class="sec">
+            <span class="lbl">Cara bermain</span>
+            <p class="help" style="margin-top:0">Sentuh atau mouse: usap atau seret ke arah tujuan, ketuk dua kali untuk ngebut. Keyboard: tombol panah, tekan dua kali untuk ngebut. Pemain lebih dari satu berbagi layar yang dibagi menjadi area tiap pemain.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="footbar">
+        <span class="note" style="margin:0">Permainan selesai saat semua predator habis atau waktu habis.</span>
+        <button id="bStart" class="btn primary lg" type="button">Mulai main</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="editor" class="screen" hidden>
+    <div class="sheet edit">
+      <h2>Soal dari Guru</h2>
+      <p class="sub">Pilih guru yang soalnya ingin diatur, atau tambahkan guru baru. Tiap guru punya daftar soal sendiri. Soal bawaan tidak bisa diubah. Pilih guru mana yang dipakai di menu utama. Perubahan tersimpan otomatis di perangkat ini.</p>
+      <div class="row" style="margin-top:18px">
+        <label class="field" for="selTeacher"><span>Guru</span><select id="selTeacher" class="sel"></select></label>
+        <label class="field" for="teacherName"><span>Nama guru</span><input type="text" id="teacherName" class="sel" maxlength="24"></label>
+      </div>
+      <div class="actions" style="margin-top:12px">
+        <button id="bAddTeacher" class="btn ghost" type="button">Tambah guru</button>
+        <button id="bDelTeacher" class="del" type="button">Hapus guru</button>
+      </div>
+      <div id="qlist"></div>
+      <div class="actions">
+        <button id="bAdd" class="btn primary" type="button">Tambah soal</button>
+        <button id="bReset" class="btn ghost" type="button">Kosongkan soal guru ini</button>
+      </div>
+      <div class="edsec"><span class="lbl">Template soal (.docx)</span>
+      <p class="help" style="margin-top:0">Unduh template, isi soal di tabelnya dengan Word, lalu unggah kembali. Kolom Jawaban diisi huruf A, B, C, atau D.</p>
+      <div class="actions" style="margin-top:10px">
+        <button id="bTpl" class="btn ghost" type="button">Unduh template</button>
+        <button id="bUpReplace" class="btn ghost" type="button">Unggah dan ganti semua soal</button>
+        <button id="bUpAdd" class="btn ghost" type="button">Unggah dan tambahkan</button>
+      </div>
+      </div>
+      <input type="file" id="fileDocx" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
+      <div class="msg" id="edMsg"></div>
+      <div class="footbar"><span class="note" style="margin:0">Perubahan tersimpan otomatis.</span><button id="bEdDone" class="btn primary lg" type="button">Selesai</button></div>
+    </div>
+  </div>
+
+  <div id="pause" class="screen" hidden>
+    <div class="sheet small">
+      <h2>Permainan dijeda</h2>
+      <div class="actions" style="justify-content:center;margin-top:8px">
+        <button id="bResume" class="btn primary lg" type="button">Lanjut</button>
+        <button id="bToMenu" class="btn ghost" type="button">Menu utama</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="end" class="screen" hidden>
+    <div class="sheet small">
+      <h2>Waktu habis</h2>
+      <ol class="rank" id="rank"></ol>
+      <div class="actions" style="justify-content:center;margin-top:8px">
+        <button id="bAgain" class="btn primary lg" type="button">Main lagi</button>
+        <button id="bEndMenu" class="btn ghost" type="button">Menu</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){'use strict';
+const $ = s => document.querySelector(s);
+const TAU = Math.PI * 2;
+const rand = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const pick = arr => arr[(Math.random() * arr.length) | 0];
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+function seeded(seed) { let a = seed >>> 0; return function () { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+
+/* ---------- Data ---------- */
+const DEFAULT_QUESTIONS = [
+  { q: 'Berapakah hasil 7 × 8?', o: ['54', '56', '58', '64'], a: 1 },
+  { q: 'Planet yang paling dekat dengan Matahari adalah...', o: ['Venus', 'Bumi', 'Merkurius', 'Mars'], a: 2 },
+  { q: 'Hewan yang bernapas dengan insang adalah...', o: ['Kucing', 'Ikan', 'Burung', 'Sapi'], a: 1 },
+  { q: 'Berapakah hasil 125 + 275?', o: ['300', '350', '400', '450'], a: 2 },
+  { q: 'Bahasa Inggris dari "ikan" adalah...', o: ['Fish', 'Bird', 'Frog', 'Fist'], a: 0 },
+  { q: 'Air membeku pada suhu berapa derajat Celsius?', o: ['100', '50', '10', '0'], a: 3 },
+  { q: 'Lambang sila pertama Pancasila adalah...', o: ['Rantai', 'Bintang', 'Pohon beringin', 'Padi dan kapas'], a: 1 },
+  { q: 'Berapakah hasil 144 : 12?', o: ['10', '11', '12', '14'], a: 2 },
+  { q: 'Proses tumbuhan membuat makanan dengan bantuan cahaya matahari disebut...', o: ['Respirasi', 'Fotosintesis', 'Evaporasi', 'Fermentasi'], a: 1 },
+  { q: 'Alat musik tradisional dari Jawa Barat yang terbuat dari bambu adalah...', o: ['Angklung', 'Sasando', 'Tifa', 'Gong'], a: 0 }
+];
+function cleanQuestions(arr) {
+  if (!Array.isArray(arr)) return null;
+  const out = [];
+  for (const it of arr) {
+    if (!it || typeof it.q !== 'string' || !Array.isArray(it.o)) continue;
+    const o = [0, 1, 2, 3].map(i => String(it.o[i] == null ? '' : it.o[i]));
+    out.push({ q: it.q, o, a: clamp(parseInt(it.a, 10) || 0, 0, 3) });
+  }
+  return out;
+}
+function validQs(arr) { return arr.filter(q => q.q.trim() && q.o.filter(o => o.trim()).length >= 2 && q.o[q.a] && q.o[q.a].trim()); }
+let teachers = (function () {
+  let t = lsGet('ikanKuis.guruList', null);
+  if (!Array.isArray(t)) {
+    const old = cleanQuestions(lsGet('ikanKuis.guru', null)) || [];
+    t = [{ id: 'g1', name: 'Guru 1', qs: old }];
+  }
+  t = t.filter(x => x && typeof x.id === 'string').map(x => ({ id: x.id, name: String(x.name || 'Guru'), qs: cleanQuestions(x.qs) || [] }));
+  if (!t.length) t = [{ id: 'g1', name: 'Guru 1', qs: [] }];
+  return t;
+})();
+const saveQuestions = () => lsSet('ikanKuis.guruList', teachers);
+function cur() { return teachers.find(t => t.id === settings.curTeacher) || teachers[0]; }
+function pool() {
+  const sel = Array.isArray(settings.srcSel) && settings.srcSel.length ? settings.srcSel : ['bawaan'];
+  let out = [];
+  if (sel.includes('bawaan')) out = out.concat(DEFAULT_QUESTIONS);
+  teachers.forEach(t => { if (sel.includes(t.id)) out = out.concat(validQs(t.qs)); });
+  return out.length ? out : DEFAULT_QUESTIONS;
+}
+const settings = Object.assign({ srcSel: ['bawaan'], curTeacher: '', players: 2, music: true, fx: true, minutes: 3, pred: 'sedang', names: ['Pemain 1', 'Pemain 2', 'Pemain 3', 'Pemain 4'] }, lsGet('ikanKuis.set', {}) || {});
+const saveSettings = () => lsSet('ikanKuis.set', settings);
+
+/* ---------- Audio (dibuat dengan WebAudio, tanpa berkas) ---------- */
+const Snd = {
+  ctx: null, master: null, music: null, sfx: null, ready: false, bubT: 0,
+  noiseBuf(c, secs, brown) {
+    const len = Math.floor(c.sampleRate * secs), buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
+    let last = 0;
+    for (let i = 0; i < len; i++) {
+      const w = Math.random() * 2 - 1;
+      if (brown) { last = (last + 0.02 * w) / 1.02; d[i] = last * 3.5; } else d[i] = w;
+    }
+    return buf;
+  },
+  layer(buf, type, freq, q, base, lfoHz, lfoDepth, lfoPhase) {
+    const c = this.ctx, src = c.createBufferSource(); src.buffer = buf; src.loop = true;
+    const f = c.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q;
+    const g = c.createGain(); g.gain.value = base;
+    src.connect(f); f.connect(g); g.connect(this.music);
+    if (lfoHz) {
+      const l = c.createOscillator(); l.frequency.value = lfoHz;
+      const lg = c.createGain(); lg.gain.value = lfoDepth;
+      l.connect(lg); lg.connect(g.gain); l.start(c.currentTime + (lfoPhase || 0));
+    }
+    src.start(c.currentTime + Math.random());
+  },
+  init() {
+    if (this.ctx) return;
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      const c = this.ctx = new AC();
+      this.master = c.createGain(); this.master.gain.value = 0.9; this.master.connect(c.destination);
+      this.music = c.createGain(); this.music.gain.value = settings.music ? 1 : 0; this.music.connect(this.master);
+      this.sfx = c.createGain(); this.sfx.gain.value = 0.7; this.sfx.connect(this.master);
+      // suara air laut: ombak berayun pelan, desis buih, dan gemuruh dalam
+      const brown = this.noiseBuf(c, 6, true), white = this.noiseBuf(c, 4, false);
+      this.layer(brown, 'lowpass', 520, 0.6, 0.22, 0.085, 0.17, 0);
+      this.layer(brown, 'lowpass', 260, 0.5, 0.2, 0.06, 0.12, 3);
+      this.layer(white, 'bandpass', 1400, 0.45, 0.02, 0.085, 0.022, 1.2);
+      this.layer(white, 'highpass', 4200, 0.4, 0.004, 0.11, 0.006, 2);
+      this.layer(brown, 'lowpass', 110, 0.7, 0.12, 0, 0, 0);
+      this.ready = true;
+      setInterval(() => this.ambientBubbles(), 900);
+    } catch (e) { this.ctx = null; }
+  },
+  unlock() {
+    this.init();
+    if (this.ctx && this.ctx.state === 'suspended') { try { this.ctx.resume(); } catch (e) {} }
+    this.applyMusic();
+  },
+  applyMusic() {
+    if (!this.ctx) return;
+    this.music.gain.setTargetAtTime(settings.music ? 1 : 0, this.ctx.currentTime, 0.3);
+  },
+  ambientBubbles() {
+    if (!this.ctx || !settings.fx || G.mode !== 'play' || G.paused || this.ctx.state !== 'running') return;
+    if (Math.random() < 0.55) this.bubbles(1 + ((Math.random() * 3) | 0), 0.08);
+  },
+  bubble(t, vol) {
+    const c = this.ctx, f0 = 280 + Math.random() * 520, o = c.createOscillator(), g = c.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f0 * (1.9 + Math.random() * 1.1), t + 0.09);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0003, t + 0.14);
+    o.connect(g); g.connect(this.sfx); o.start(t); o.stop(t + 0.18);
+  },
+  bubbles(n, vol) {
+    const t = this.ctx.currentTime;
+    for (let i = 0; i < n; i++) this.bubble(t + i * (0.05 + Math.random() * 0.09), vol);
+  },
+  tone(freq, t, dur, type, vol, slideTo, dest) {
+    const c = this.ctx; if (!c) return;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + 0.015); g.gain.exponentialRampToValueAtTime(0.0005, t + dur);
+    o.connect(g); g.connect(dest || this.sfx); o.start(t); o.stop(t + dur + 0.05);
+  },
+  fx(kind) {
+    if (!settings.fx || !this.ctx) return;
+    const t = this.ctx.currentTime;
+    if (kind === 'coin') { this.tone(880, t, 0.12, 'sine', 0.25); this.tone(1320, t + 0.08, 0.22, 'sine', 0.25); this.bubbles(2, 0.14); }
+    else if (kind === 'good') { [523, 659, 784, 1047].forEach((f, i) => this.tone(f, t + i * 0.09, 0.3, 'triangle', 0.25)); }
+    else if (kind === 'bad') { this.tone(300, t, 0.45, 'sawtooth', 0.18, 120); }
+    else if (kind === 'stun') { this.tone(160, t, 0.35, 'square', 0.2, 60); this.tone(90, t + 0.05, 0.4, 'sine', 0.3, 50); this.bubbles(3, 0.12); }
+    else if (kind === 'eat') { this.tone(300, t, 0.14, 'sine', 0.3, 900); this.tone(500, t + 0.1, 0.12, 'sine', 0.25, 1200); this.bubbles(4, 0.16); }
+    else if (kind === 'boost') { this.tone(400, t, 0.18, 'sine', 0.12, 800); this.bubbles(3, 0.12); }
+    else if (kind === 'end') { [784, 659, 523, 392].forEach((f, i) => this.tone(f, t + i * 0.14, 0.4, 'triangle', 0.25)); }
+  }
+};
+/* ---------- Kanvas & desain ikan ---------- */
+const cv = $('#c'), ctx = cv.getContext('2d');
+const G = { w: 800, h: 600, S: 1, dpr: 1, t: 0, mode: 'menu', paused: false };
+
+const PLAYER_DESIGNS = [
+  { nm: 'Si Jingga', color: '#ff8a2b', body: '#ff8a2b', belly: '#ffc07a', tail: '#ff7416', fin: '#ff9d45', ry: .58, nose: .82, tailSize: .85, dorsal: .35, ventral: .22, stripes: [.38, -.1], stripeCol: '#ffffff', stripeEdge: 'rgba(20,10,0,.55)', fx: 'bubble' },
+  { nm: 'Si Biru', color: '#3aa0ff', body: '#2f7fff', belly: '#8fd0ff', tail: '#ffd23a', fin: '#ffd23a', ry: .68, nose: .85, tailSize: .9, dorsal: .4, ventral: .3, swoosh: true, fx: 'sparkle' },
+  { nm: 'Si Merah Muda', color: '#ff5fa8', body: '#ff5fa8', belly: '#ffc4e0', tail: '#ff8cc4', fin: '#ff8cc4', ry: .6, nose: .8, tailSize: .7, dorsal: 1.05, ventral: .95, stripes: [.15, -.25], stripeCol: 'rgba(255,255,255,.45)', fx: 'heart' },
+  { nm: 'Si Hijau', color: '#7be04a', body: '#6fd44a', belly: '#f1fa9a', tail: '#3fa02a', fin: '#4fbf33', ry: .86, nose: .95, tailSize: .5, dorsal: .12, ventral: .1, spots: true, spikes: true, fx: 'spark' }
+];
+const PRED_DESIGNS = [
+  { body: '#6f8a9c', belly: '#e3edf3', tail: '#5d7787', fin: '#58707f', ry: .34, nose: .4, tailSize: 1.5, dorsal: 1.0, ventral: .25, teeth: true, angry: true },
+  { body: '#c23b3b', belly: '#f08a6a', tail: '#9e2a2a', fin: '#d95a4a', ry: .55, nose: .85, tailSize: .8, dorsal: .5, ventral: .3, teeth: true, angry: true, spots: true },
+  { body: '#7f98a6', belly: '#eef3f5', tail: '#62798a', fin: '#62798a', ry: .24, nose: .5, tailSize: .9, dorsal: .3, ventral: .2, teeth: true, angry: true },
+  { body: '#4a3b78', belly: '#7a62b8', tail: '#3a2d60', fin: '#5b4a95', ry: .82, nose: .9, tailSize: .7, dorsal: .3, ventral: .2, teeth: true, angry: true, lure: true }
+];
+
+function bodyPath(c, r, ry, n) {
+  c.beginPath(); c.moveTo(r, 0);
+  c.bezierCurveTo(r * n, -ry * 1.05, -r * .3, -ry * 1.1, -r * .85, -ry * .22);
+  c.lineTo(-r * .85, ry * .22);
+  c.bezierCurveTo(-r * .3, ry * 1.1, r * n, ry * 1.05, r, 0);
+  c.closePath();
+}
+
+function drawFish(c, f, d, alpha) {
+  const r = f.r, ry = r * d.ry, wg = Math.sin(f.wag);
+  c.save(); c.translate(f.x, f.y); c.scale(f.face, 1); c.rotate(f.tilt);
+  if (alpha != null) c.globalAlpha = alpha;
+  if (d.spikes) {
+    c.strokeStyle = d.fin; c.lineWidth = Math.max(1.5, r * .06); c.lineCap = 'round';
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * TAU, px = Math.cos(a) * r * .78 - r * .05, py = Math.sin(a) * ry * .98;
+      c.beginPath(); c.moveTo(px, py); c.lineTo(px + Math.cos(a) * r * .2, py + Math.sin(a) * r * .2); c.stroke();
+    }
+  }
+  c.fillStyle = d.fin;
+  if (d.dorsal) { c.beginPath(); c.moveTo(r * .35, -ry * .85); c.quadraticCurveTo(r * .05 + wg * r * .06, -ry * (1 + d.dorsal), -r * .5, -ry * .8); c.closePath(); c.fill(); }
+  if (d.ventral) { c.beginPath(); c.moveTo(r * .2, ry * .85); c.quadraticCurveTo(-r * .1 + wg * r * .06, ry * (1 + d.ventral), -r * .4, ry * .8); c.closePath(); c.fill(); }
+  // ekor bergoyang
+  c.save(); c.translate(-r * .78, 0); c.rotate(wg * .4);
+  c.fillStyle = d.tail; c.beginPath(); c.moveTo(r * .2, 0);
+  c.quadraticCurveTo(-r * .3, -ry * .8, -r * .8, -ry * d.tailSize * 1.1);
+  c.quadraticCurveTo(-r * .5, 0, -r * .8, ry * d.tailSize * 1.1);
+  c.quadraticCurveTo(-r * .3, ry * .8, r * .2, 0); c.fill(); c.restore();
+  // badan
+  bodyPath(c, r, ry, d.nose);
+  const g = c.createLinearGradient(0, -ry, 0, ry);
+  g.addColorStop(0, d.body); g.addColorStop(.62, d.body); g.addColorStop(1, d.belly);
+  c.fillStyle = g; c.fill();
+  c.save(); c.clip();
+  if (d.stripes) d.stripes.forEach(s => {
+    const sx = r * s + wg * r * .01;
+    if (d.stripeEdge) { c.fillStyle = d.stripeEdge; c.fillRect(sx - r * .13, -ry * 1.3, r * .26, ry * 2.6); }
+    c.fillStyle = d.stripeCol; c.fillRect(sx - r * .08, -ry * 1.3, r * .16, ry * 2.6);
+  });
+  if (d.spots) {
+    c.fillStyle = 'rgba(0,0,0,.2)';
+    [[.2, -.3], [-.1, .3], [-.4, -.2], [.05, .55], [.5, .3], [-.5, .35]].forEach(p => { c.beginPath(); c.arc(r * p[0], ry * p[1], Math.max(1.5, r * .06), 0, TAU); c.fill(); });
+  }
+  if (d.swoosh) {
+    c.strokeStyle = '#10204a'; c.lineWidth = Math.max(2, r * .14); c.lineCap = 'round';
+    c.beginPath(); c.moveTo(r * .5, -ry * .55); c.bezierCurveTo(r * .1, -ry * .1, -r * .15, -ry * .55, -r * .7, -ry * .05); c.stroke();
+  }
+  c.restore();
+  bodyPath(c, r, ry, d.nose);
+  c.strokeStyle = 'rgba(0,0,0,.28)'; c.lineWidth = Math.max(1, r * .04); c.stroke();
+  // sirip dada
+  c.save(); c.translate(r * .12, ry * .25); c.rotate(.5 + wg * .5);
+  c.fillStyle = d.fin; c.globalAlpha = (alpha == null ? 1 : alpha) * .9;
+  c.beginPath(); c.ellipse(-r * .12, 0, r * .2, ry * .2, 0, 0, TAU); c.fill(); c.restore();
+  // mulut & gigi
+  if (d.teeth) {
+    c.fillStyle = '#fff'; const my = ry * .16;
+    for (let i = 0; i < 5; i++) {
+      const x0 = r * .94 - i * r * .1;
+      c.beginPath(); c.moveTo(x0, my + i * ry * .015); c.lineTo(x0 - r * .045, my + r * .11); c.lineTo(x0 - r * .09, my + i * ry * .015 + ry * .02); c.closePath(); c.fill();
+    }
+  } else {
+    c.strokeStyle = 'rgba(0,0,0,.5)'; c.lineWidth = Math.max(1, r * .04); c.lineCap = 'round';
+    c.beginPath(); c.moveTo(r * .96, ry * .1); c.quadraticCurveTo(r * .85, ry * .3, r * .7, ry * .22); c.stroke();
+  }
+  // mata
+  const er = Math.max(2.4, r * .13), ex = r * .55, ey = -ry * .25;
+  c.fillStyle = '#fff'; c.beginPath(); c.arc(ex, ey, er, 0, TAU); c.fill();
+  c.fillStyle = '#111'; c.beginPath(); c.arc(ex + er * .22, ey, er * .58, 0, TAU); c.fill();
+  c.fillStyle = '#fff'; c.beginPath(); c.arc(ex + er * .02, ey - er * .25, er * .2, 0, TAU); c.fill();
+  if (d.angry) {
+    c.strokeStyle = '#1a0d0d'; c.lineWidth = Math.max(1.5, r * .05); c.lineCap = 'round';
+    c.beginPath(); c.moveTo(ex - er * 1.3, ey - er * 1.7); c.lineTo(ex + er * 1.2, ey - er * .5); c.stroke();
+  }
+  if (d.lure) {
+    const lx = r * 1.15, ly = -ry * 1.75, pulse = 1 + .25 * Math.sin(G.t * 6);
+    c.strokeStyle = d.fin; c.lineWidth = Math.max(1.5, r * .03);
+    c.beginPath(); c.moveTo(r * .45, -ry * .95); c.quadraticCurveTo(r * .9, -ry * 2.1, lx, ly); c.stroke();
+    const lg = c.createRadialGradient(lx, ly, 0, lx, ly, r * .3 * pulse);
+    lg.addColorStop(0, 'rgba(255,250,180,1)'); lg.addColorStop(.4, 'rgba(255,220,80,.7)'); lg.addColorStop(1, 'rgba(255,220,80,0)');
+    c.fillStyle = lg; c.beginPath(); c.arc(lx, ly, r * .3 * pulse, 0, TAU); c.fill();
+  }
+  c.restore();
+}
+
+/* ---------- Partikel efek ---------- */
+const parts = [];
+function addPart(o) { if (!settings.fx) return; if (parts.length > 420) parts.shift(); parts.push(o); }
+function emit(kind, x, y, n, color, spread) {
+  spread = spread || 1;
+  for (let i = 0; i < n; i++) {
+    const a = rand(0, TAU), sp = rand(30, 130) * spread;
+    const base = { x: x + rand(-4, 4), y: y + rand(-4, 4), vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0, max: rand(.6, 1.3), size: rand(3, 7) * G.S, kind, color, rot: rand(0, TAU) };
+    if (kind === 'bubble') { base.vy = -rand(20, 70); base.vx *= .25; base.size = rand(2, 6) * G.S; base.max = rand(.8, 1.6); }
+    if (kind === 'heart') { base.vy = -rand(25, 70); base.vx *= .35; base.size = rand(5, 9) * G.S; }
+    addPart(base);
+  }
+}
+function updateParts(dt) {
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const p = parts[i]; p.life += dt;
+    if (p.life >= p.max) { parts.splice(i, 1); continue; }
+    p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= (1 - dt * 1.5);
+    if (p.kind !== 'bubble' && p.kind !== 'heart') p.vy *= (1 - dt * 1.2);
+    p.rot += dt * 3;
+  }
+}
+function drawParts(c) {
+  parts.forEach(p => {
+    const k = 1 - p.life / p.max, s = p.size;
+    c.save(); c.globalAlpha = Math.max(0, k); c.translate(p.x, p.y);
+    if (p.kind === 'bubble') {
+      c.strokeStyle = 'rgba(230,250,255,.9)'; c.lineWidth = 1.5; c.beginPath(); c.arc(0, 0, s, 0, TAU); c.stroke();
+      c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.arc(-s * .3, -s * .3, s * .25, 0, TAU); c.fill();
+    } else if (p.kind === 'star' || p.kind === 'sparkle') {
+      c.rotate(p.rot); c.fillStyle = p.color || '#fff0a0'; c.beginPath();
+      for (let i = 0; i < 8; i++) { const rr = i % 2 ? s * .35 : s * 1.2, a = i * Math.PI / 4; c.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); }
+      c.closePath(); c.fill();
+    } else if (p.kind === 'heart') {
+      c.fillStyle = p.color || '#ff7ab8'; c.beginPath();
+      c.moveTo(0, s * .4); c.bezierCurveTo(-s * 1.2, -s * .3, -s * .5, -s * 1.1, 0, -s * .4);
+      c.bezierCurveTo(s * .5, -s * 1.1, s * 1.2, -s * .3, 0, s * .4); c.fill();
+    } else if (p.kind === 'spark') {
+      c.rotate(p.rot); c.strokeStyle = p.color || '#e6ff6a'; c.lineWidth = 2; c.lineCap = 'round';
+      c.beginPath(); c.moveTo(-s, 0); c.lineTo(-s * .2, -s * .5); c.lineTo(s * .2, s * .5); c.lineTo(s, 0); c.stroke();
+    } else {
+      c.fillStyle = p.color || '#fff'; c.beginPath(); c.arc(0, 0, s * .6, 0, TAU); c.fill();
+    }
+    c.restore();
+  });
+}
+
+/* ---------- Latar laut: air, sinar, rumput laut, karang ---------- */
+let staticLayer = null, bgGrad = null, weeds = [], bgFish = [], plankton = [], ambBubbles = [];
+let sandY = 500, sandH = 80;
+
+function coralBranch(c, x, y, len, ang, w, depth, col, rnd) {
+  if (depth === 0 || len < 3) { c.fillStyle = col; c.beginPath(); c.arc(x, y, Math.max(1.5, w * .9), 0, TAU); c.fill(); return; }
+  const x2 = x + Math.cos(ang) * len, y2 = y + Math.sin(ang) * len;
+  c.strokeStyle = col; c.lineWidth = w; c.lineCap = 'round';
+  c.beginPath(); c.moveTo(x, y); c.lineTo(x2, y2); c.stroke();
+  const k = 2 + (rnd() < .4 ? 1 : 0);
+  for (let i = 0; i < k; i++) coralBranch(c, x2, y2, len * .74, ang + (i - (k - 1) / 2) * (.65 + rnd() * .3) + (rnd() - .5) * .2, w * .74, depth - 1, col, rnd);
+}
+function coralDome(c, x, y, s, col, col2, rnd) {
+  const g = c.createRadialGradient(x - s * .3, y - s * .6, s * .1, x, y - s * .3, s * 1.1);
+  g.addColorStop(0, col2); g.addColorStop(1, col);
+  c.fillStyle = g; c.beginPath(); c.ellipse(x, y, s, s * .85, 0, Math.PI, 0); c.closePath(); c.fill();
+  c.strokeStyle = 'rgba(0,0,0,.18)'; c.lineWidth = Math.max(1, s * .05); c.lineCap = 'round';
+  const n = 5 + ((s / 9) | 0);
+  for (let i = 0; i < n; i++) {
+    const a = Math.PI + rnd() * Math.PI, rr = rnd() * s * .8, a0 = rnd() * TAU;
+    c.beginPath(); c.arc(x + Math.cos(a) * rr * .9, y + Math.sin(a) * rr * .75, s * (.08 + rnd() * .12), a0, a0 + 2.5); c.stroke();
+  }
+}
+function coralFan(c, x, y, s, col, rnd) {
+  const cy = y - s * .15, n = 9 + ((s / 6) | 0);
+  c.strokeStyle = col; c.lineCap = 'round'; c.lineWidth = Math.max(1, s * .04);
+  c.beginPath(); c.moveTo(x, y); c.lineTo(x, cy); c.stroke();
+  for (let i = 0; i < n; i++) {
+    const a = -Math.PI * .5 + (i / (n - 1) - .5) * 2.3;
+    c.beginPath(); c.moveTo(x, cy); c.lineTo(x + Math.cos(a) * s, cy + Math.sin(a) * s); c.stroke();
+  }
+  c.lineWidth = Math.max(1, s * .025); c.globalAlpha = .7;
+  [.45, .75].forEach(k => { c.beginPath(); c.arc(x, cy, s * k, -Math.PI * .5 - 1.15, -Math.PI * .5 + 1.15); c.stroke(); });
+  c.globalAlpha = 1;
+}
+function coralTubes(c, x, y, s, col, rnd) {
+  const n = 3 + ((s / 25) | 0);
+  for (let i = 0; i < n; i++) {
+    const tx = x + (i - (n - 1) / 2) * s * .24, th = s * (.5 + rnd() * .5), tw = s * (.1 + rnd() * .05);
+    c.fillStyle = col; c.fillRect(tx - tw, y - th, tw * 2, th);
+    c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.ellipse(tx, y - th, tw, tw * .35, 0, 0, TAU); c.fill();
+  }
+}
+function coralTable(c, x, y, s, col, col2, rnd) {
+  c.fillStyle = col2; c.fillRect(x - s * .08, y - s * .55, s * .16, s * .55);
+  c.fillStyle = col; c.beginPath(); c.ellipse(x, y - s * .58, s * .6, s * .2, 0, 0, TAU); c.fill();
+  c.fillStyle = 'rgba(255,255,255,.5)';
+  for (let i = 0; i < 9; i++) { c.beginPath(); c.arc(x + (rnd() - .5) * s * 1.0, y - s * .58 + (rnd() - .5) * s * .24, Math.max(.8, s * .025), 0, TAU); c.fill(); }
+}
+
+function buildScene() {
+  const S = G.S, w = G.w, h = G.h, dpr = G.dpr;
+  sandH = 72 * S; sandY = h - sandH;
+  bgGrad = ctx.createLinearGradient(0, 0, 0, h);
+  bgGrad.addColorStop(0, '#34c0de'); bgGrad.addColorStop(.35, '#0d86a8'); bgGrad.addColorStop(.75, '#07506f'); bgGrad.addColorStop(1, '#042a40');
+  staticLayer = document.createElement('canvas');
+  staticLayer.width = Math.ceil(w * dpr); staticLayer.height = Math.ceil(h * dpr);
+  const c = staticLayer.getContext('2d'); c.scale(dpr, dpr);
+  const rnd = seeded(7);
+  // pasir
+  const sg = c.createLinearGradient(0, sandY - 20 * S, 0, h);
+  sg.addColorStop(0, '#d9c590'); sg.addColorStop(1, '#9d8450');
+  c.fillStyle = sg; c.beginPath(); c.moveTo(0, h);
+  for (let x = 0; x <= w + 20; x += 20) c.lineTo(x, sandY + Math.sin(x * .013) * 10 * S + Math.sin(x * .04) * 4 * S);
+  c.lineTo(w, h); c.closePath(); c.fill();
+  c.strokeStyle = 'rgba(80,60,20,.18)'; c.lineWidth = 2;
+  for (let j = 0; j < 4; j++) { c.beginPath(); for (let x = 0; x <= w; x += 16) c.lineTo(x, sandY + 24 * S + j * 12 * S + Math.sin(x * .03 + j) * 3 * S); c.stroke(); }
+  // karang berbagai ukuran
+  const pal = [['#ff6f91', '#ffb3c6'], ['#ff9671', '#ffc4a8'], ['#f9c74f', '#fde8a0'], ['#c77dff', '#e5c1ff'], ['#4cc9f0', '#a6e9fa'], ['#f94144', '#ff9a9c'], ['#90be6d', '#c5e3a8'], ['#ff8fab', '#ffd1dc']];
+  const n = Math.max(16, Math.round(w / 34)), list = [];
+  for (let i = 0; i < n; i++) list.push({ x: rnd() * w, y: sandY + rnd() * sandH * .6 - 4 * S, s: (12 + Math.pow(rnd(), 2) * 160) * S, k: (rnd() * 5) | 0, p: pal[(rnd() * pal.length) | 0] });
+  list.sort((a, b) => a.y - b.y);
+  list.forEach(o => {
+    const col = o.p[0], col2 = o.p[1];
+    if (o.k === 0) coralBranch(c, o.x, o.y, o.s * .5, -Math.PI / 2, Math.max(2, o.s * .07), o.s > 70 ? 5 : o.s > 35 ? 4 : 3, col, rnd);
+    else if (o.k === 1) coralDome(c, o.x, o.y, o.s * .6, col, col2, rnd);
+    else if (o.k === 2) coralFan(c, o.x, o.y, o.s * .7, col, rnd);
+    else if (o.k === 3) coralTubes(c, o.x, o.y, o.s * .7, col, rnd);
+    else coralTable(c, o.x, o.y, o.s * .8, col, col2, rnd);
+  });
+  // rumput laut berbagai ukuran
+  const r2 = seeded(21); weeds = [];
+  const wn = Math.round(w / 20);
+  for (let i = 0; i < wn; i++) weeds.push({ nx: r2(), h: (28 + Math.pow(r2(), 1.6) * 250) * S, w: (4 + r2() * 8) * S, phase: r2() * TAU, speed: .7 + r2() * .8, hue: 95 + r2() * 65, front: r2() < .16, base: sandY + r2() * sandH * .55, kelp: r2() < .3 });
+  weeds.sort((a, b) => (a.front - b.front) || (a.base - b.base));
+  // ikan latar, plankton, gelembung
+  const r3 = seeded(99); bgFish = [];
+  for (let i = 0; i < 16; i++) bgFish.push({ x: r3() * w, y: h * (.1 + r3() * .6), sp: (14 + r3() * 30) * (r3() < .5 ? 1 : -1) * S, s: (6 + r3() * 12) * S, wag: r3() * 6 });
+  plankton = []; for (let i = 0; i < 70; i++) plankton.push({ x: r3() * w, y: r3() * h, vx: (r3() - .5) * 8, vy: (r3() - .5) * 6, r: (.8 + r3() * 1.6) * S, tw: r3() * 6 });
+  ambBubbles = []; for (let i = 0; i < 24; i++) ambBubbles.push({ x: r3() * w, y: sandY + r3() * (h - sandY) - r3() * h * .8, r: (2 + r3() * 5) * S, sp: 18 + r3() * 30, ph: r3() * 6 });
+}
+
+function drawWeed(c, wd, t) {
+  const x0 = wd.nx * G.w, segs = 10, segH = wd.h / segs, L = [], R = [], P = [];
+  for (let i = 0; i <= segs; i++) {
+    const k = i / segs;
+    const sway = Math.sin(t * wd.speed + wd.phase + k * 2.2) * (6 + wd.h * .07) * k + Math.sin(t * .5 + wd.phase * 2) * k * k * 8;
+    const ww = wd.w * (1 - k * .75) * (wd.kelp ? 1.5 + .4 * Math.sin(i * 1.7) : 1);
+    const px = x0 + sway, py = wd.base - i * segH;
+    P.push([px, py]); L.push([px - ww, py]); R.push([px + ww, py]);
+  }
+  c.fillStyle = 'hsl(' + wd.hue + ' 55% ' + (wd.front ? 22 : 33) + '%)';
+  c.beginPath(); c.moveTo(L[0][0], L[0][1]);
+  for (let i = 1; i <= segs; i++) c.lineTo(L[i][0], L[i][1]);
+  for (let i = segs; i >= 0; i--) c.lineTo(R[i][0], R[i][1]);
+  c.closePath(); c.fill();
+  c.strokeStyle = 'rgba(220,255,200,.22)'; c.lineWidth = 1; c.beginPath();
+  P.forEach((p, i) => i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.stroke();
+}
+
+function drawBackdrop(c, t, dt) {
+  c.fillStyle = bgGrad; c.fillRect(0, 0, G.w, G.h);
+  // aliran air
+  c.save(); c.lineWidth = 8 * G.S; c.strokeStyle = 'rgba(255,255,255,.035)';
+  for (let j = 0; j < 5; j++) {
+    c.beginPath();
+    for (let x = 0; x <= G.w + 20; x += 20) { const y = G.h * (.14 + j * .14) + Math.sin(x * .008 + t * .6 + j * 1.3) * 14 * G.S + Math.sin(x * .02 - t * .8 + j) * 6 * G.S; x ? c.lineTo(x, y) : c.moveTo(x, y); }
+    c.stroke();
+  }
+  c.restore();
+  // sinar matahari
+  c.save(); c.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < 7; i++) {
+    const bx = (i / 6) * G.w * 1.25 - G.w * .1 + Math.sin(t * .15 + i * 1.7) * G.w * .05;
+    const wd = G.w * (.05 + .04 * ((i * 37) % 5) / 5), a = .04 + .035 * (.5 + .5 * Math.sin(t * .4 + i * 2)), ln = G.h * .9, sk = G.h * .3;
+    const g = c.createLinearGradient(0, 0, 0, ln); g.addColorStop(0, 'rgba(210,250,255,' + a + ')'); g.addColorStop(1, 'rgba(210,250,255,0)');
+    c.fillStyle = g; c.beginPath(); c.moveTo(bx, 0); c.lineTo(bx + wd, 0); c.lineTo(bx + wd - sk, ln); c.lineTo(bx - sk, ln); c.closePath(); c.fill();
+  }
+  c.restore();
+  // ikan latar (siluet)
+  c.fillStyle = 'rgba(4,40,64,.22)';
+  bgFish.forEach(b => {
+    b.x += b.sp * dt; b.wag += dt * 6;
+    if (b.x > G.w + 40) b.x = -40; if (b.x < -40) b.x = G.w + 40;
+    const d = b.sp > 0 ? 1 : -1, s = b.s;
+    c.save(); c.translate(b.x, b.y + Math.sin(t * .7 + b.wag * .1) * 6); c.scale(d, 1);
+    c.beginPath(); c.ellipse(0, 0, s, s * .5, 0, 0, TAU); c.fill();
+    c.beginPath(); c.moveTo(-s * .8, 0); c.lineTo(-s * 1.6, -s * .5 + Math.sin(b.wag) * s * .25); c.lineTo(-s * 1.6, s * .5 + Math.sin(b.wag) * s * .25); c.closePath(); c.fill();
+    c.restore();
+  });
+  // plankton
+  plankton.forEach(p => {
+    p.x += p.vx * dt; p.y += p.vy * dt; p.tw += dt * 2;
+    if (p.x < 0) p.x = G.w; if (p.x > G.w) p.x = 0; if (p.y < 0) p.y = G.h; if (p.y > G.h) p.y = 0;
+    c.fillStyle = 'rgba(230,255,255,' + (.18 + .15 * Math.sin(p.tw)) + ')'; c.beginPath(); c.arc(p.x, p.y, p.r, 0, TAU); c.fill();
+  });
+  // karang + pasir (statis) lalu rumput laut belakang
+  c.drawImage(staticLayer, 0, 0, G.w, G.h);
+  for (let i = 0; i < weeds.length; i++) if (!weeds[i].front) drawWeed(c, weeds[i], t);
+}
+
+function drawForeground(c, t, dt) {
+  for (let i = 0; i < weeds.length; i++) if (weeds[i].front) drawWeed(c, weeds[i], t);
+  // gelembung udara
+  ambBubbles.forEach(b => {
+    b.y -= b.sp * dt; if (b.y < -10) { b.y = G.h + 10; b.x = Math.random() * G.w; }
+    const x = b.x + Math.sin(t * 1.4 + b.ph) * 8;
+    c.strokeStyle = 'rgba(230,250,255,.5)'; c.lineWidth = 1.2; c.beginPath(); c.arc(x, b.y, b.r, 0, TAU); c.stroke();
+    c.fillStyle = 'rgba(255,255,255,.25)'; c.beginPath(); c.arc(x - b.r * .3, b.y - b.r * .3, b.r * .25, 0, TAU); c.fill();
+  });
+  // permukaan air bergelombang
+  const sg = c.createLinearGradient(0, 0, 0, 46 * G.S); sg.addColorStop(0, 'rgba(225,252,255,.5)'); sg.addColorStop(1, 'rgba(225,252,255,0)');
+  c.fillStyle = sg; c.beginPath(); c.moveTo(0, 0);
+  for (let x = 0; x <= G.w + 12; x += 12) c.lineTo(x, 12 * G.S + Math.sin(x * .02 + t * 1.3) * 5 * G.S + Math.sin(x * .045 - t * .9) * 3 * G.S);
+  c.lineTo(G.w, 0); c.closePath(); c.fill();
+  // vinyet
+  const vg = c.createRadialGradient(G.w / 2, G.h / 2, Math.min(G.w, G.h) * .45, G.w / 2, G.h / 2, Math.max(G.w, G.h) * .75);
+  vg.addColorStop(0, 'rgba(0,20,35,0)'); vg.addColorStop(1, 'rgba(0,20,35,.4)');
+  c.fillStyle = vg; c.fillRect(0, 0, G.w, G.h);
+}
+
+function resize() {
+  const w = $('#app').clientWidth || window.innerWidth, h = $('#app').clientHeight || window.innerHeight;
+  G.dpr = Math.min(window.devicePixelRatio || 1, 2);
+  G.w = w; G.h = h; G.S = clamp(Math.min(w, h) / 640, .62, 1.35);
+  cv.width = Math.round(w * G.dpr); cv.height = Math.round(h * G.dpr);
+  ctx.setTransform(G.dpr, 0, 0, G.dpr, 0, 0);
+  buildScene();
+  if (typeof onResizeGame === 'function') onResizeGame();
+}
+/* ---------- Logika game ---------- */
+let players = [], coins = [], preds = [], respawns = [], floaters = [];
+let deck = [];
+const game = { time: 180, hudT: 0 };
+const BASE_R = () => 20 * G.S, MAX_R = () => 68 * G.S, GROW = () => 3.6 * G.S;
+
+function newPlayer(i, n) {
+  const d = PLAYER_DESIGNS[i];
+  const nm = (settings.names[i] || '').trim() || ('Pemain ' + (i + 1));
+  return { id: i, name: nm, d, color: d.color, x: G.w * (i + 1) / (n + 1), y: G.h * (.38 + .24 * (i % 2)), vx: 0, vy: 0, r: BASE_R(), face: 1, tilt: 0, wag: rand(0, 6),
+    score: 0, coins: 0, stunT: 0, slowT: 0, boostT: 0, boostCd: 0, invT: 2, frozen: false, pvx: 0, pvy: 0, usePtr: false, pop: 0, fxT: 0, lastTap: 0, tapX: 0, tapY: 0 };
+}
+function spawnCoin() {
+  let x = 0, y = 0;
+  for (let k = 0; k < 20; k++) {
+    x = rand(40, G.w - 40); y = rand(80, G.h - 50 * G.S);
+    if (players.every(p => Math.hypot(p.x - x, p.y - y) > 140 * G.S) && coins.every(c => Math.hypot(c.x - x, c.y - y) > 80 * G.S)) break;
+  }
+  return { x, y, r: 13 * G.S, ph: rand(0, 6), bob: rand(0, 6) };
+}
+function replaceCoin(i) {
+  if (preds.length > 0) coins[i] = spawnCoin(); else coins.splice(i, 1);
+}
+function spawnPred(initial, idx) {
+  const d = pick(PRED_DESIGNS);
+  let mult = Math.random() < .5 ? pick([.6, .75, .9]) : pick([1.3, 1.7, 2.2, 2.8, 3.3]);
+  if (initial && idx < 2) mult = pick([.7, .85]);
+  else if (initial && idx < 4) mult = pick([1.8, 2.4, 3]);
+  const r = clamp(BASE_R() * mult, 14 * G.S, 96 * G.S);
+  let x, y, face = 1;
+  if (initial) {
+    for (let k = 0; k < 20; k++) { x = rand(60, G.w - 60); y = rand(90, G.h - 80); if (players.every(p => Math.hypot(p.x - x, p.y - y) > 220 * G.S)) break; }
+    face = Math.random() < .5 ? 1 : -1;
+  } else {
+    const left = Math.random() < .5; x = left ? -r : G.w + r; y = rand(90, G.h - 80); face = left ? 1 : -1;
+  }
+  return { x, y, vx: face * 40, vy: 0, r, d, face, tilt: 0, wag: rand(0, 6), aggr: Math.random() < .5, wander: face > 0 ? 0 : Math.PI, speed: (75 + rand(0, 50)) * G.S * (r > 50 * G.S ? .85 : 1.1) };
+}
+function onResizeGame() {
+  players.forEach(p => { p.x = clamp(p.x, 20, G.w - 20); p.y = clamp(p.y, 20, G.h - 20); });
+  coins.forEach(c => { c.x = clamp(c.x, 30, G.w - 30); c.y = clamp(c.y, 70, G.h - 30); });
+}
+
+function startGame() {
+  Snd.unlock();
+  const n = settings.players;
+  players = []; for (let i = 0; i < n; i++) players.push(newPlayer(i, n));
+  coins = []; for (let i = 0; i < 3 + n; i++) coins.push(spawnCoin());
+  preds = []; respawns = [];
+  const cnt = Math.min(pool().length, 40);
+  for (let i = 0; i < cnt; i++) preds.push(spawnPred(true, i));
+  parts.length = 0; floaters.length = 0; clearQuizzes(); deck = [];
+  game.time = settings.minutes * 60; game.hudT = 0;
+  Object.keys(keyDown).forEach(k => keyDown[k] = false); ptrs.clear();
+  G.mode = 'play'; G.paused = false;
+  ['#menu', '#end', '#pause', '#editor'].forEach(s => $(s).hidden = true);
+  $('#hud').hidden = false;
+  buildChips(); updateHud(true);
+}
+function toMenu() {
+  G.mode = 'menu'; G.paused = false; clearQuizzes();
+  ['#hud', '#end', '#pause', '#editor'].forEach(s => $(s).hidden = true);
+  $('#menu').hidden = false;
+}
+function endGame(cleared) {
+  G.mode = 'end'; clearQuizzes(); $('#hud').hidden = true;
+  $('#end h2').textContent = cleared ? 'Semua predator habis!' : 'Waktu habis!';
+  Snd.fx('end');
+  const rank = players.slice().sort((a, b) => b.score - a.score || b.r - a.r);
+  $('#rank').innerHTML = '';
+  rank.forEach((p, i) => {
+    const li = document.createElement('li'); li.style.setProperty('--pc', p.color);
+    const st = document.createElement('strong'); st.textContent = (i + 1) + '. ' + p.name;
+    const em = document.createElement('em'); em.textContent = p.score;
+    li.appendChild(st); li.appendChild(em); $('#rank').appendChild(li);
+  });
+  $('#end').hidden = false;
+}
+
+/* ---------- Soal ---------- */
+function nextQuestion() {
+  if (!deck.length) { deck = pool().map((_, i) => i); for (let i = deck.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [deck[i], deck[j]] = [deck[j], deck[i]]; } }
+  return pool()[deck.pop()];
+}
+function clearQuizzes() {
+  const d = $('#quizdock'); if (d) d.innerHTML = '';
+  players.forEach(p => { p.quiz = null; });
+}
+function anyQuiz() { return players.some(p => p.quiz); }
+function openQuiz(p) {
+  const q = nextQuestion();
+  const opts = q.o.map((t, i) => ({ t, ok: i === q.a })).filter(o => o.t.trim() !== '');
+  for (let i = opts.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [opts[i], opts[j]] = [opts[j], opts[i]]; }
+  const card = document.createElement('div'); card.className = 'card'; card.setAttribute('role', 'dialog'); card.setAttribute('aria-live', 'polite');
+  card.style.setProperty('--pc', p.color); card.style.order = String(p.id);
+  const head = document.createElement('div'); head.className = 'qhead';
+  const who = document.createElement('span'); who.className = 'qwho'; who.textContent = p.name + ' dapat koin';
+  head.appendChild(who);
+  const tx = document.createElement('p'); tx.className = 'qtext'; tx.textContent = q.q;
+  const wrap = document.createElement('div'); wrap.className = 'opts';
+  const fb = document.createElement('p'); fb.className = 'fb';
+  const st = { p, opts, locked: false, timer: 0, card, wrap, fb };
+  opts.forEach((o, i) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'opt';
+    const kk = document.createElement('span'); kk.className = 'k'; kk.textContent = 'ABCD'[i];
+    const tt = document.createElement('span'); tt.textContent = o.t;
+    b.appendChild(kk); b.appendChild(tt); b.addEventListener('click', () => answer(p, i)); wrap.appendChild(b);
+  });
+  card.appendChild(head); card.appendChild(tx); card.appendChild(wrap); card.appendChild(fb);
+  p.quiz = st;
+  const dock = $('#quizdock'); dock.appendChild(card);
+  dock.classList.toggle('dock-multi', players.length > 1);
+}
+function answer(p, i) {
+  const a = p.quiz; if (!a || a.locked) return;
+  a.locked = true; a.timer = 1.3;
+  const btns = a.wrap.children, ok = a.opts[i].ok;
+  for (let k = 0; k < btns.length; k++) { btns[k].disabled = true; if (a.opts[k].ok) btns[k].classList.add('good'); }
+  if (ok) {
+    p.score += 10; p.r = Math.min(MAX_R(), p.r + GROW()); p.pop = .5; a.fb.textContent = 'Benar. +10 poin, ikanmu membesar'; a.fb.style.color = 'var(--good)';
+    floaters.push({ x: p.x, y: p.y - p.r, text: '+10', life: 1.2, color: '#7dffb8' }); Snd.fx('good');
+    emit('star', p.x, p.y, 14, '#ffe27a', 1.2);
+  } else {
+    btns[i].classList.add('bad'); a.fb.textContent = 'Belum tepat, ukuran ikan tidak berubah.'; a.fb.style.color = 'var(--bad)'; Snd.fx('bad');
+  }
+}
+
+/* ---------- Input ---------- */
+const keysMap = [
+  { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight' },
+  { up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD' },
+  { up: 'KeyI', down: 'KeyK', left: 'KeyJ', right: 'KeyL' },
+  { up: 'KeyT', down: 'KeyG', left: 'KeyF', right: 'KeyH' }
+];
+const keyDown = {}, lastKey = {}, ptrs = new Map();
+function boost(p) {
+  if (!p || p.boostCd > 0 || p.frozen || p.stunT > 0) return;
+  p.boostT = 1.6; p.boostCd = 2.2; Snd.fx('boost'); emit('bubble', p.x - p.face * p.r, p.y, 8, null);
+}
+window.addEventListener('keydown', e => {
+  const tg = e.target && e.target.tagName;
+  if (tg === 'INPUT' || tg === 'TEXTAREA' || tg === 'SELECT') return;
+  if (G.mode !== 'play') return;
+  for (let i = 0; i < players.length; i++) {
+    const m = keysMap[i];
+    if (e.code === m.up || e.code === m.down || e.code === m.left || e.code === m.right) {
+      e.preventDefault();
+      if (keyDown[e.code]) return;
+      keyDown[e.code] = true; Snd.unlock();
+      const now = performance.now();
+      if (lastKey[e.code] && now - lastKey[e.code] < 320) boost(players[i]);
+      lastKey[e.code] = now; return;
+    }
+  }
+});
+window.addEventListener('keyup', e => { keyDown[e.code] = false; });
+window.addEventListener('blur', () => { Object.keys(keyDown).forEach(k => keyDown[k] = false); });
+
+function zoneOf(x, y) {
+  const n = players.length;
+  if (n <= 1) return 0;
+  if (n === 2) return x < G.w / 2 ? 0 : 1;
+  if (n === 3) return Math.min(2, (x / (G.w / 3)) | 0);
+  return (x < G.w / 2 ? 0 : 1) + (y < G.h / 2 ? 2 : 0);
+}
+const RING = 46;
+cv.addEventListener('pointerdown', e => {
+  if (G.mode !== 'play' || G.paused) return;
+  e.preventDefault(); Snd.unlock();
+  const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+  const pi = zoneOf(x, y), p = players[pi]; if (!p) return;
+  const now = performance.now();
+  if (now - p.lastTap < 320 && Math.hypot(x - p.tapX, y - p.tapY) < 70) { boost(p); p.lastTap = 0; } else { p.lastTap = now; p.tapX = x; p.tapY = y; }
+  ptrs.set(e.pointerId, { pi, sx: x, sy: y });
+  p.usePtr = true; p.pvx = 0; p.pvy = 0;
+  try { cv.setPointerCapture(e.pointerId); } catch (er) {}
+});
+cv.addEventListener('pointermove', e => {
+  const o = ptrs.get(e.pointerId); if (!o) return;
+  const p = players[o.pi]; if (!p) return;
+  const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+  let vx = x - o.sx, vy = y - o.sy; const len = Math.hypot(vx, vy);
+  if (len > RING) { const k = (len - RING) / len; o.sx += vx * k; o.sy += vy * k; vx = x - o.sx; vy = y - o.sy; }
+  const l2 = Math.hypot(vx, vy);
+  if (l2 < 5) { p.pvx = 0; p.pvy = 0; } else { p.pvx = vx / RING; p.pvy = vy / RING; }
+});
+function endPtr(e) {
+  const o = ptrs.get(e.pointerId); if (!o) return;
+  ptrs.delete(e.pointerId);
+  const p = players[o.pi]; if (p) { p.pvx = 0; p.pvy = 0; let any = false; ptrs.forEach(q => { if (q.pi === o.pi) any = true; }); p.usePtr = any; }
+}
+cv.addEventListener('pointerup', endPtr); cv.addEventListener('pointercancel', endPtr);
+cv.addEventListener('contextmenu', e => e.preventDefault());
+
+/* ---------- Pembaruan ---------- */
+const FXCOL = { bubble: null, sparkle: '#fff0a0', heart: '#ff7ab8', spark: '#e6ff6a' };
+function updatePlayer(p, dt) {
+  p.invT = Math.max(0, p.invT - dt); p.stunT = Math.max(0, p.stunT - dt); p.slowT = Math.max(0, p.slowT - dt);
+  p.boostT = Math.max(0, p.boostT - dt); p.boostCd = Math.max(0, p.boostCd - dt); p.pop = Math.max(0, p.pop - dt);
+  let ax = 0, ay = 0;
+  if (p.usePtr) { ax = p.pvx; ay = p.pvy; }
+  else {
+    const m = keysMap[p.id];
+    ax = (keyDown[m.right] ? 1 : 0) - (keyDown[m.left] ? 1 : 0); ay = (keyDown[m.down] ? 1 : 0) - (keyDown[m.up] ? 1 : 0);
+  }
+  const mag = Math.hypot(ax, ay); if (mag > 1) { ax /= mag; ay /= mag; }
+  const grown = clamp((p.r - BASE_R()) / (MAX_R() - BASE_R()), 0, 1), maxSp = 235 * G.S;
+  let sp = maxSp * (1 - .22 * grown);
+  if (p.boostT > 0) sp *= 1.85; if (p.slowT > 0) sp *= .45;
+  const halt = p.frozen || p.stunT > 0;
+  const tx = halt ? 0 : ax * sp, ty = halt ? 0 : ay * sp, k = Math.min(1, dt * (halt ? 5 : 6));
+  p.vx += (tx - p.vx) * k; p.vy += (ty - p.vy) * k;
+  p.x += p.vx * dt; p.y += p.vy * dt;
+  const mx = p.r * .6, myT = p.r * .45 + 8, myB = p.r * .45;
+  if (p.x < mx) { p.x = mx; p.vx = 0; } if (p.x > G.w - mx) { p.x = G.w - mx; p.vx = 0; }
+  if (p.y < myT) { p.y = myT; p.vy = 0; } if (p.y > G.h - myB) { p.y = G.h - myB; p.vy = 0; }
+  if (Math.abs(p.vx) > 10) p.face = p.vx > 0 ? 1 : -1;
+  const speed = Math.hypot(p.vx, p.vy);
+  if (p.stunT > 0) p.tilt = Math.sin(G.t * 14) * .35;
+  else p.tilt += (clamp(p.vy / maxSp * .5, -.6, .6) - p.tilt) * Math.min(1, dt * 8);
+  p.wag += dt * (p.stunT > 0 ? 2 : 6 + speed / (30 * G.S));
+  p.fxT -= dt;
+  if (p.fxT <= 0 && speed > 40 * G.S && !halt) {
+    p.fxT = p.boostT > 0 ? .04 : .1;
+    emit(p.d.fx, p.x - p.face * p.r * .8, p.y + rand(-4, 4), 1, FXCOL[p.d.fx], .4);
+  }
+  if (p.stunT > 0 && Math.random() < dt * 8) emit('star', p.x, p.y - p.r * .6, 1, '#ffe27a', .5);
+}
+function updatePred(q, dt) {
+  let tx = null, ty = null, best = 1e9;
+  coins.forEach(c => { const d = Math.hypot(c.x - q.x, c.y - q.y); if (d < best) { best = d; tx = c.x; ty = c.y; } });
+  q.wander += rand(-1, 1) * dt * 2.2;
+  let dx = Math.cos(q.wander) * .5, dy = Math.sin(q.wander) * .3;
+  if (tx != null) { dx += (tx - q.x) / (best || 1) * 1.2; dy += (ty - q.y) / (best || 1) * 1.2; }
+  players.forEach(p => {
+    const d = Math.hypot(p.x - q.x, p.y - q.y) || 1;
+    if (q.aggr && q.r > p.r && d < 260 * G.S && !p.frozen && p.invT <= 0) { dx += (p.x - q.x) / d * 1.1; dy += (p.y - q.y) / d * 1.1; }
+    else if (q.r < p.r && d < 200 * G.S) { dx -= (p.x - q.x) / d * .9; dy -= (p.y - q.y) / d * .9; }
+  });
+  if (q.x < 60) dx += 1.2; if (q.x > G.w - 60) dx -= 1.2; if (q.y < 90) dy += 1.2; if (q.y > G.h - 70) dy -= 1.2;
+  const m = Math.hypot(dx, dy) || 1, k = Math.min(1, dt * 2.5);
+  q.vx += (dx / m * q.speed - q.vx) * k; q.vy += (dy / m * q.speed - q.vy) * k;
+  q.x += q.vx * dt; q.y += q.vy * dt;
+  if (Math.abs(q.vx) > 8) q.face = q.vx > 0 ? 1 : -1;
+  q.tilt += (clamp(q.vy / (q.speed + 1) * .5, -.5, .5) - q.tilt) * Math.min(1, dt * 6);
+  q.wag += dt * (4 + Math.hypot(q.vx, q.vy) / (30 * G.S));
+  for (let i = 0; i < coins.length; i++) {
+    const c = coins[i];
+    if (Math.hypot(c.x - q.x, c.y - q.y) < q.r * .7 + c.r) {
+      emit('star', c.x, c.y, 8, '#ffd84a', .8); replaceCoin(i); break;
+    }
+  }
+}
+function collide() {
+  players.forEach(p => {
+    if (p.frozen || p.invT > 0 || p.stunT > 0) return;
+    for (let i = 0; i < preds.length; i++) {
+      const q = preds[i], d = Math.hypot(p.x - q.x, p.y - q.y) || 1;
+      if (d < p.r * .62 + q.r * .62) {
+        if (q.r > p.r) {
+          p.stunT = 2.5; p.invT = 4; p.boostT = 0; p.vx = (p.x - q.x) / d * 320 * G.S; p.vy = (p.y - q.y) / d * 320 * G.S;
+          q.wander += Math.PI; emit('star', p.x, p.y, 12, '#ff9a6a', 1.1); Snd.fx('stun');
+          floaters.push({ x: p.x, y: p.y - p.r, text: 'Pingsan!', life: 1.2, color: '#ffb36a' });
+        } else {
+          p.score += 5; p.slowT = 3; p.invT = .4; p.pop = .35;
+          emit('bubble', q.x, q.y, 14, null, 1.4); emit(p.d.fx, q.x, q.y, 8, FXCOL[p.d.fx], 1.2); Snd.fx('eat');
+          floaters.push({ x: q.x, y: q.y - q.r, text: '+5 Lahap! (lambat)', life: 1.3, color: '#9fe8ff' });
+          preds.splice(i, 1);
+        }
+        break;
+      }
+    }
+  });
+}
+function catchCoins() {
+  players.forEach(p => {
+    if (p.frozen || p.stunT > 0) return;
+    for (let i = 0; i < coins.length; i++) {
+      const c = coins[i];
+      if (Math.hypot(c.x - p.x, c.y - p.y) < p.r * .62 + c.r) {
+        replaceCoin(i); p.coins++; p.vx = p.vy = 0;
+        emit('star', c.x, c.y, 14, '#ffd84a', 1.1); Snd.fx('coin');
+        if (pool().length) { p.frozen = true; p.invT = Math.max(p.invT, 1); openQuiz(p); }
+        else { p.score += 5; p.r = Math.min(MAX_R(), p.r + GROW()); p.pop = .45; floaters.push({ x: p.x, y: p.y - p.r, text: '+5', life: 1, color: '#ffe27a' }); }
+        break;
+      }
+    }
+  });
+}
+function update(dt) {
+  game.time -= dt;
+  players.forEach(p => updatePlayer(p, dt));
+  preds.forEach(q => updatePred(q, dt));
+  catchCoins(); collide();
+  players.forEach(p => {
+    const a = p.quiz;
+    if (a && a.locked) {
+      a.timer -= dt;
+      if (a.timer <= 0) { p.frozen = false; p.invT = Math.max(p.invT, 1.5); p.quiz = null; a.card.remove(); }
+    }
+  });
+  for (let i = floaters.length - 1; i >= 0; i--) { const f = floaters[i]; f.life -= dt; f.y -= 38 * dt; if (f.life <= 0) floaters.splice(i, 1); }
+  updateParts(dt);
+  game.hudT -= dt; if (game.hudT <= 0) { game.hudT = .15; updateHud(false); }
+  if (game.time <= 0) { game.time = 0; updateHud(true); endGame(false); }
+  else if (preds.length === 0 && coins.length === 0 && !anyQuiz()) { updateHud(true); endGame(true); }
+}
+
+/* ---------- HUD ---------- */
+let chipEls = [];
+function buildChips() {
+  const box = $('#chips'); box.innerHTML = ''; chipEls = [];
+  players.forEach(p => {
+    const d = document.createElement('div'); d.className = 'chip'; d.style.setProperty('--pc', p.color);
+    d.innerHTML = '<b>0</b><span class="n"></span><i><u></u></i><span class="s">&nbsp;</span>';
+    d.querySelector('.n').textContent = p.name; box.appendChild(d);
+    chipEls.push({ b: d.querySelector('b'), u: d.querySelector('u'), s: d.querySelector('.s') });
+  });
+}
+function updateHud(force) {
+  const t = Math.ceil(game.time), m = (t / 60) | 0, s = t % 60;
+  $('#timer').textContent = m + ':' + (s < 10 ? '0' : '') + s; $('#pred').textContent = preds.length;
+  players.forEach((p, i) => {
+    const e = chipEls[i]; if (!e) return;
+    e.b.textContent = p.score;
+    e.u.style.width = (clamp((p.r - BASE_R()) / (MAX_R() - BASE_R()), 0, 1) * 100).toFixed(0) + '%';
+    e.s.textContent = p.frozen ? 'Menjawab soal' : p.stunT > 0 ? 'Pingsan' : p.slowT > 0 ? 'Lambat' : p.boostT > 0 ? 'Ngebut' : ' ';
+  });
+}
+
+/* ---------- Gambar isi game ---------- */
+function drawCoin(c, o, t) {
+  const k = Math.abs(Math.cos(t * 2.2 + o.ph)), y = o.y + Math.sin(t * 1.8 + o.bob) * 4 * G.S, r = o.r;
+  const gl = c.createRadialGradient(o.x, y, 0, o.x, y, r * 2.8);
+  gl.addColorStop(0, 'rgba(255,224,90,.55)'); gl.addColorStop(1, 'rgba(255,224,90,0)');
+  c.fillStyle = gl; c.beginPath(); c.arc(o.x, y, r * 2.8, 0, TAU); c.fill();
+  const g = c.createLinearGradient(o.x - r, y - r, o.x + r, y + r); g.addColorStop(0, '#fff0a0'); g.addColorStop(.5, '#ffc928'); g.addColorStop(1, '#d68f00');
+  c.fillStyle = g; c.beginPath(); c.ellipse(o.x, y, r * (.22 + .78 * k), r, 0, 0, TAU); c.fill();
+  c.strokeStyle = '#a86a00'; c.lineWidth = Math.max(1.5, r * .14); c.stroke();
+  if (k > .4) { c.fillStyle = '#9a5f00'; c.font = '800 ' + Math.round(r * 1.25) + 'px "Plus Jakarta Sans",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('?', o.x, y + r * .06); }
+}
+const tmpF = { x: 0, y: 0, r: 10, face: 1, tilt: 0, wag: 0 };
+function drawPlayer(c, p) {
+  tmpF.x = p.x; tmpF.y = p.y; tmpF.r = p.r * (1 + p.pop * .35); tmpF.face = p.face; tmpF.tilt = p.tilt; tmpF.wag = p.wag;
+  if (settings.fx) {
+    const gr = c.createRadialGradient(p.x, p.y, p.r * .3, p.x, p.y, p.r * 1.9);
+    gr.addColorStop(0, p.color + '55'); gr.addColorStop(1, p.color + '00');
+    c.fillStyle = gr; c.beginPath(); c.arc(p.x, p.y, p.r * 1.9, 0, TAU); c.fill();
+    if (p.boostT > 0) {
+      c.strokeStyle = 'rgba(255,255,255,.45)'; c.lineWidth = 2; c.lineCap = 'round';
+      for (let i = -2; i <= 2; i++) { const yy = p.y + i * p.r * .25, x0 = p.x - p.face * p.r * (1.1 + Math.random() * .3); c.beginPath(); c.moveTo(x0, yy); c.lineTo(x0 - p.face * p.r * (.9 + Math.random() * .6), yy); c.stroke(); }
+    }
+  }
+  if (p.slowT > 0) { c.strokeStyle = 'rgba(150,230,255,.7)'; c.lineWidth = 2; c.setLineDash([5, 6]); c.beginPath(); c.arc(p.x, p.y, p.r * 1.15, G.t * 2, G.t * 2 + TAU); c.stroke(); c.setLineDash([]); }
+  const blink = p.invT > 0 && !p.frozen && p.stunT <= 0 ? .55 + .45 * Math.sin(G.t * 30) : 1;
+  drawFish(c, tmpF, p.d, blink);
+  if (p.stunT > 0) {
+    for (let i = 0; i < 3; i++) {
+      const a = G.t * 5 + i * TAU / 3, sx = p.x + Math.cos(a) * p.r * .7, sy = p.y - p.r * .75 + Math.sin(a) * p.r * .22;
+      c.fillStyle = '#ffe27a'; c.beginPath();
+      for (let k = 0; k < 8; k++) { const rr = k % 2 ? 2 : 6 * G.S, aa = k * Math.PI / 4; c.lineTo(sx + Math.cos(aa) * rr, sy + Math.sin(aa) * rr); }
+      c.closePath(); c.fill();
+    }
+  }
+  if (p.frozen) {
+    const bx = p.x + p.r * .35, by = p.y - p.r * 1.0 - 8 * G.S, br = 11 * G.S;
+    c.fillStyle = 'rgba(255,255,255,.95)'; c.beginPath(); c.arc(bx, by, br, 0, TAU); c.fill();
+    c.beginPath(); c.arc(bx - br * .7, by + br * 1.2, br * .22, 0, TAU); c.fill();
+    c.fillStyle = '#0a4a66'; c.font = '800 ' + Math.round(br * 1.5) + 'px "Plus Jakarta Sans",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('?', bx, by + 1);
+  }
+  c.font = '800 ' + Math.round(12 * G.S + 1) + 'px "Plus Jakarta Sans",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+  c.lineWidth = 3; c.strokeStyle = 'rgba(0,25,40,.8)'; c.fillStyle = p.color;
+  const ty = p.y - p.r * Math.max(.7, p.d.ry + .3) - 6 * G.S - (p.frozen ? 22 * G.S : 0);
+  c.strokeText(p.name, p.x, ty); c.fillText(p.name, p.x, ty);
+}
+function drawEntities(c) {
+  coins.forEach(o => drawCoin(c, o, G.t));
+  preds.slice().sort((a, b) => a.r - b.r).forEach(q => drawFish(c, q, q.d));
+  players.forEach(p => drawPlayer(c, p));
+  drawParts(c);
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  floaters.forEach(f => {
+    c.globalAlpha = clamp(f.life * 1.5, 0, 1); c.font = '800 ' + Math.round(18 * G.S) + 'px "Plus Jakarta Sans",sans-serif';
+    c.lineWidth = 4; c.strokeStyle = 'rgba(0,25,40,.85)'; c.fillStyle = f.color; c.strokeText(f.text, f.x, f.y); c.fillText(f.text, f.x, f.y);
+  });
+  c.globalAlpha = 1;
+  const n = players.length;
+  if (n > 1) {
+    c.save(); c.strokeStyle = 'rgba(255,255,255,.13)'; c.lineWidth = 2; c.setLineDash([8, 10]); c.beginPath();
+    if (n === 2) { c.moveTo(G.w / 2, 70); c.lineTo(G.w / 2, G.h); }
+    else if (n === 3) { c.moveTo(G.w / 3, 70); c.lineTo(G.w / 3, G.h); c.moveTo(G.w * 2 / 3, 70); c.lineTo(G.w * 2 / 3, G.h); }
+    else { c.moveTo(G.w / 2, 70); c.lineTo(G.w / 2, G.h); c.moveTo(0, G.h / 2); c.lineTo(G.w, G.h / 2); }
+    c.stroke(); c.restore();
+  }
+}
+/* ---------- Menu, editor soal, pengaturan ---------- */
+const HINTS = ['Tombol panah', 'W A S D', 'I J K L', 'T F G H'];
+const previews = [];
+function renderMenu() {
+  const grid = $('#pgrid');
+  if (!grid.children.length) {
+    for (let i = 0; i < 4; i++) {
+      const d = PLAYER_DESIGNS[i], card = document.createElement('div');
+      card.className = 'pcard'; card.style.setProperty('--pc', d.color);
+      card.innerHTML = '<canvas aria-hidden="true"></canvas><input type="text" maxlength="14" id="pname' + i + '" aria-label="Nama pemain ' + (i + 1) + '"><small></small>';
+      const inp = card.querySelector('input');
+      inp.value = settings.names[i] || ('Pemain ' + (i + 1));
+      inp.addEventListener('input', () => { settings.names[i] = inp.value; saveSettings(); });
+      card.querySelector('small').textContent = d.nm + '. Keyboard: ' + HINTS[i];
+      grid.appendChild(card);
+      previews.push({ cv: card.querySelector('canvas'), card, lw: 0 });
+    }
+  }
+  settings.players = clamp(parseInt(settings.players, 10) || 1, 1, 4);
+  $('#segPlayers').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(parseInt(b.dataset.n, 10) === settings.players)));
+  previews.forEach((pv, i) => pv.card.classList.toggle('off', i >= settings.players));
+  $('#selTime').value = String(settings.minutes);
+  $('#qCount').textContent = teachers.reduce((n, t) => n + t.qs.length, 0);
+  settings.srcSel = (Array.isArray(settings.srcSel) ? settings.srcSel : ['bawaan']).filter(id => id === 'bawaan' || teachers.some(t => t.id === id));
+  if (!settings.srcSel.length) settings.srcSel = ['bawaan'];
+  const sel = $('#selSource'); sel.innerHTML = '';
+  const opt = (v, t) => { const o = document.createElement('option'); o.value = v; o.textContent = t; sel.appendChild(o); };
+  opt('bawaan', 'Soal bawaan (' + DEFAULT_QUESTIONS.length + ' soal)');
+  teachers.forEach(t => opt(t.id, t.name + ' (' + validQs(t.qs).length + ' soal)'));
+  if (teachers.length > 1) opt('semua', 'Semua guru + soal bawaan');
+  const ss = settings.srcSel;
+  sel.value = ss.length === 1 ? ss[0] : 'semua';
+  if (sel.value !== (ss.length === 1 ? ss[0] : 'semua')) sel.value = 'bawaan';
+  const total = pool().length, onlyEmpty = !settings.srcSel.includes('bawaan') && teachers.filter(t => settings.srcSel.includes(t.id)).every(t => !validQs(t.qs).length);
+  $('#srcNote').textContent = onlyEmpty ? 'Guru yang dipilih belum punya soal, sementara memakai soal bawaan (' + total + ' soal).' : 'Dipakai ' + total + ' soal. Jumlah predator mengikuti jumlah soal.';
+}
+function drawPreviews(t) {
+  previews.forEach((pv, i) => {
+    const cvs = pv.cv; if (!cvs.offsetParent) return;
+    const w = cvs.clientWidth, h = cvs.clientHeight; if (!w || !h) return;
+    if (pv.lw !== w) { cvs.width = Math.round(w * G.dpr); cvs.height = Math.round(h * G.dpr); pv.lw = w; }
+    const c = cvs.getContext('2d'); c.setTransform(G.dpr, 0, 0, G.dpr, 0, 0); c.clearRect(0, 0, w, h);
+    const f = { x: w / 2 + Math.sin(t * 1.2 + i) * w * .14, y: h / 2 + Math.sin(t * 1.7 + i) * 4, r: Math.min(w * .3, 26), face: Math.cos(t * 1.2 + i) > 0 ? 1 : -1, tilt: 0, wag: t * 8 + i };
+    drawFish(c, f, PLAYER_DESIGNS[i]);
+  });
+}
+function syncToggles() {
+  const m = settings.music, f = settings.fx;
+  $('#tMusic').setAttribute('aria-pressed', String(m)); $('#tMusic').textContent = 'Suara laut: ' + (m ? 'Nyala' : 'Mati');
+  $('#tFx').setAttribute('aria-pressed', String(f)); $('#tFx').textContent = 'Efek: ' + (f ? 'Nyala' : 'Mati');
+  $('#bMusic').textContent = 'Suara laut: ' + (m ? 'On' : 'Off'); $('#bFx').textContent = 'Efek: ' + (f ? 'On' : 'Off');
+}
+function setMusic(v) { settings.music = v; saveSettings(); syncToggles(); Snd.unlock(); }
+function setFx(v) { settings.fx = v; saveSettings(); syncToggles(); if (!v) parts.length = 0; }
+function setPause(v) {
+  if (G.mode !== 'play') return;
+  G.paused = v; $('#pause').hidden = !v;
+  if (v) { ptrs.clear(); players.forEach(p => { p.pvx = 0; p.pvy = 0; p.usePtr = false; }); }
+}
+
+$('#segPlayers').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  settings.players = parseInt(b.dataset.n, 10); saveSettings(); renderMenu();
+});
+$('#selSource').addEventListener('change', e => { const v = e.target.value; settings.srcSel = v === 'semua' ? ['bawaan'].concat(teachers.map(t => t.id)) : [v]; saveSettings(); renderMenu(); });
+$('#tMusic').addEventListener('click', () => setMusic(!settings.music));
+$('#tFx').addEventListener('click', () => setFx(!settings.fx));
+$('#bMusic').addEventListener('click', () => setMusic(!settings.music));
+$('#bFx').addEventListener('click', () => setFx(!settings.fx));
+$('#selTime').addEventListener('change', e => { settings.minutes = parseInt(e.target.value, 10) || 3; saveSettings(); });
+$('#bStart').addEventListener('click', startGame);
+$('#bPause').addEventListener('click', () => setPause(true));
+$('#bResume').addEventListener('click', () => setPause(false));
+$('#bToMenu').addEventListener('click', toMenu);
+$('#bAgain').addEventListener('click', startGame);
+$('#bEndMenu').addEventListener('click', toMenu);
+document.addEventListener('pointerdown', () => Snd.unlock(), { once: true });
+document.addEventListener('visibilitychange', () => { if (document.hidden && G.mode === 'play') setPause(true); });
+window.addEventListener('keydown', e => {
+  if ((e.code === 'Escape' || e.code === 'KeyP') && G.mode === 'play') {
+    const tg = e.target && e.target.tagName; if (tg === 'INPUT' || tg === 'TEXTAREA') return;
+    setPause(!G.paused);
+  }
+});
+
+/* editor soal */
+function renderTeachers() {
+  const sel = $('#selTeacher'); sel.innerHTML = '';
+  const c = cur(); settings.curTeacher = c.id;
+  teachers.forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = t.name; sel.appendChild(o); });
+  sel.value = c.id; $('#teacherName').value = c.name;
+}
+function renderEditor() {
+  renderTeachers();
+  const box = $('#qlist'); box.innerHTML = '';
+  cur().qs.forEach((q, i) => {
+    const it = document.createElement('div'); it.className = 'ed-item';
+    const top = document.createElement('div'); top.className = 'ed-top';
+    const lb = document.createElement('label'); lb.htmlFor = 'q' + i + 't'; lb.textContent = 'Soal ' + (i + 1);
+    const del = document.createElement('button'); del.type = 'button'; del.className = 'del'; del.textContent = 'Hapus';
+    del.addEventListener('click', () => { cur().qs.splice(i, 1); saveQuestions(); renderEditor(); renderMenu(); });
+    top.appendChild(lb); top.appendChild(del); it.appendChild(top);
+    const ta = document.createElement('textarea'); ta.id = 'q' + i + 't'; ta.value = q.q; ta.placeholder = 'Tulis pertanyaan di sini';
+    ta.addEventListener('input', () => { q.q = ta.value; saveQuestions(); });
+    it.appendChild(ta);
+    for (let j = 0; j < 4; j++) {
+      const row = document.createElement('div'); row.className = 'ed-opt';
+      const rd = document.createElement('input'); rd.type = 'radio'; rd.name = 'qa' + i; rd.id = 'q' + i + 'a' + j; rd.checked = q.a === j;
+      rd.setAttribute('aria-label', 'Jawaban benar pilihan ' + 'ABCD'[j]);
+      rd.addEventListener('change', () => { if (rd.checked) { q.a = j; saveQuestions(); } });
+      const tx = document.createElement('input'); tx.type = 'text'; tx.id = 'q' + i + 'o' + j; tx.value = q.o[j]; tx.placeholder = 'Pilihan ' + 'ABCD'[j];
+      tx.addEventListener('input', () => { q.o[j] = tx.value; saveQuestions(); });
+      row.appendChild(rd); row.appendChild(tx); it.appendChild(row);
+    }
+    box.appendChild(it);
+  });
+  if (!cur().qs.length) { const p = document.createElement('p'); p.className = 'help'; p.textContent = 'Belum ada soal guru. Tambahkan soal atau unggah dari template. Soal bawaan tetap tersedia.'; box.appendChild(p); }
+}
+function edMsg(t) { $('#edMsg').textContent = t; }
+$('#bEdit').addEventListener('click', () => { renderEditor(); edMsg(''); $('#menu').hidden = true; $('#editor').hidden = false; });
+$('#bAdd').addEventListener('click', () => {
+  cur().qs.push({ q: '', o: ['', '', '', ''], a: 0 }); saveQuestions(); renderEditor();
+  const el = $('#q' + (cur().qs.length - 1) + 't'); if (el) { el.focus(); el.scrollIntoView({ block: 'center' }); }
+});
+let resetArm = 0;
+$('#bReset').addEventListener('click', () => {
+  const b = $('#bReset');
+  if (!resetArm) { b.textContent = 'Yakin? Klik sekali lagi'; resetArm = setTimeout(() => { resetArm = 0; b.textContent = 'Kosongkan soal guru ini'; }, 3000); return; }
+  clearTimeout(resetArm); resetArm = 0; b.textContent = 'Kosongkan soal guru ini';
+  cur().qs = []; saveQuestions(); renderEditor(); renderMenu(); edMsg('Soal milik guru ini dikosongkan. Soal bawaan dan guru lain tidak berubah.');
+});
+/* template .docx: unduh dan unggah */
+const XML_ESC = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+function cellXml(text, w, bold, fill) {
+  return '<w:tc><w:tcPr><w:tcW w:w="' + w + '" w:type="dxa"/>' + (fill ? '<w:shd w:val="clear" w:color="auto" w:fill="' + fill + '"/>' : '') + '</w:tcPr><w:p><w:r>' + (bold ? '<w:rPr><w:b/></w:rPr>' : '') + '<w:t xml:space="preserve">' + XML_ESC(text) + '</w:t></w:r></w:p></w:tc>';
+}
+function buildTemplateDocx() {
+  if (typeof JSZip === 'undefined') return null;
+  const W = [600, 3300, 1500, 1500, 1500, 1500, 1100];
+  const row = (cells, head) => '<w:tr>' + cells.map((t, i) => cellXml(t, W[i], head, head ? 'D9EAF2' : null)).join('') + '</w:tr>';
+  const rows = [row(['No', 'Pertanyaan', 'Pilihan A', 'Pilihan B', 'Pilihan C', 'Pilihan D', 'Jawaban'], true),
+    row(['1', 'Berapakah hasil 7 x 8?', '54', '56', '58', '64', 'B']),
+    row(['2', 'Hewan yang bernapas dengan insang adalah...', 'Kucing', 'Ikan', 'Burung', 'Sapi', 'B']),
+    row(['3', 'Ibu kota Indonesia adalah...', 'Surabaya', 'Bandung', 'Jakarta', 'Medan', 'C'])].join('');
+  const borders = ['top', 'left', 'bottom', 'right', 'insideH', 'insideV'].map(b => '<w:' + b + ' w:val="single" w:sz="4" w:space="0" w:color="808080"/>').join('');
+  const p = (t, b) => '<w:p><w:r>' + (b ? '<w:rPr><w:b/><w:sz w:val="32"/></w:rPr>' : '') + '<w:t xml:space="preserve">' + XML_ESC(t) + '</w:t></w:r></w:p>';
+  const body = p('Template Soal Ikan Kuis Koin', true) +
+    p('Isi satu soal per baris tabel. Kolom Jawaban diisi huruf A, B, C, atau D. Hapus tiga baris contoh sebelum mengunggah. Jangan ubah baris judul tabel.') +
+    '<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/><w:tblBorders>' + borders + '</w:tblBorders></w:tblPr><w:tblGrid>' + W.map(w => '<w:gridCol w:w="' + w + '"/>').join('') + '</w:tblGrid>' + rows + '</w:tbl>' +
+    '<w:sectPr><w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/><w:pgMar w:top="1000" w:right="1000" w:bottom="1000" w:left="1000" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr>';
+  const z = new JSZip();
+  z.file('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>');
+  z.file('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
+  z.file('word/document.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>' + body + '</w:body></w:document>');
+  return z.generateAsync({ type: 'arraybuffer', compression: 'DEFLATE' });
+}
+async function parseDocx(buf) {
+  const z = await JSZip.loadAsync(buf);
+  const f = z.file('word/document.xml'); if (!f) throw new Error('bukan docx');
+  const doc = new DOMParser().parseFromString(await f.async('string'), 'application/xml');
+  const NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+  const out = []; let bad = 0;
+  const tbls = doc.getElementsByTagNameNS(NS, 'tbl');
+  for (const tbl of tbls) {
+    for (const tr of tbl.getElementsByTagNameNS(NS, 'tr')) {
+      const cells = [...tr.getElementsByTagNameNS(NS, 'tc')].map(tc => [...tc.getElementsByTagNameNS(NS, 'p')].map(p => [...p.getElementsByTagNameNS(NS, 't')].map(t => t.textContent).join('')).join(' ').trim());
+      if (cells.length < 6) continue;
+      if (/^pertanyaan|^soal$/i.test(cells[cells.length === 6 ? 0 : 1]) ) continue;
+      let c = cells; if (c.length >= 7) c = c.slice(1, 7);
+      const ans = 'ABCD'.indexOf((c[5] || '').trim().charAt(0).toUpperCase().replace(/[1-4]/, m => 'ABCD'[m - 1]));
+      const o = c.slice(1, 5);
+      if (!c[0] || o.filter(x => x).length < 2) { if (c[0] || o.some(x => x)) bad++; continue; }
+      if (ans < 0 || !o[ans]) { bad++; continue; }
+      out.push({ q: c[0], o, a: ans });
+    }
+  }
+  return { out, bad };
+}
+$('#bTpl').addEventListener('click', async () => {
+  try {
+    const dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null;
+    const data = await buildTemplateDocx();
+    if (!data) { edMsg('Template belum bisa dibuat. Muat ulang halaman lalu coba lagi.'); return; }
+    if (!dl) {
+      const url = URL.createObjectURL(new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }));
+      const a = document.createElement('a'); a.href = url; a.download = 'template-soal.docx'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000);
+      edMsg('Template diunduh.'); return;
+    }
+    await dl.save({ filename: 'template-soal.docx', data });
+    edMsg('Template tersimpan.');
+  } catch (e) { edMsg(e && e.code === 'declined' ? 'Unduhan dibatalkan.' : 'Template gagal diunduh.'); }
+});
+let upMode = 'replace';
+$('#bUpReplace').addEventListener('click', () => { upMode = 'replace'; $('#fileDocx').value = ''; $('#fileDocx').click(); });
+$('#bUpAdd').addEventListener('click', () => { upMode = 'add'; $('#fileDocx').value = ''; $('#fileDocx').click(); });
+$('#fileDocx').addEventListener('change', async e => {
+  const file = e.target.files && e.target.files[0]; if (!file) return;
+  try {
+    if (typeof JSZip === 'undefined') throw new Error('zip');
+    const { out, bad } = await parseDocx(await file.arrayBuffer());
+    if (!out.length) { edMsg('Tidak ada soal yang terbaca. Isi tabel pada template, dengan kolom Jawaban berisi A, B, C, atau D.'); return; }
+    cur().qs = upMode === 'add' ? cur().qs.concat(out) : out;
+    saveQuestions(); renderEditor(); renderMenu();
+    edMsg(out.length + ' soal dibaca dari "' + file.name + '"' + (bad ? '. ' + bad + ' baris dilewati karena pilihan atau jawabannya belum lengkap.' : '.'));
+  } catch (er) { edMsg('File tidak bisa dibaca. Gunakan file .docx dari template.'); }
+});
+$('#selTeacher').addEventListener('change', e => { settings.curTeacher = e.target.value; saveSettings(); renderEditor(); edMsg(''); });
+$('#teacherName').addEventListener('input', e => { cur().name = e.target.value.trim() ? e.target.value : 'Guru'; saveQuestions(); const o = $('#selTeacher').selectedOptions && $('#selTeacher').selectedOptions[0]; if (o) o.textContent = cur().name; });
+$('#bAddTeacher').addEventListener('click', () => {
+  let n = teachers.length + 1; while (teachers.some(t => t.name === 'Guru ' + n)) n++;
+  const t = { id: 'g' + Date.now().toString(36), name: 'Guru ' + n, qs: [] };
+  teachers.push(t); settings.curTeacher = t.id; saveQuestions(); saveSettings(); renderEditor(); edMsg('Guru baru ditambahkan. Ganti namanya di kolom nama.');
+  $('#teacherName').focus(); $('#teacherName').select();
+});
+let delArm = 0;
+$('#bDelTeacher').addEventListener('click', () => {
+  const b = $('#bDelTeacher');
+  if (!delArm) { b.textContent = 'Yakin? Klik lagi'; delArm = setTimeout(() => { delArm = 0; b.textContent = 'Hapus guru'; }, 3000); return; }
+  clearTimeout(delArm); delArm = 0; b.textContent = 'Hapus guru';
+  const id = cur().id; teachers = teachers.filter(t => t.id !== id);
+  if (!teachers.length) teachers.push({ id: 'g' + Date.now().toString(36), name: 'Guru 1', qs: [] });
+  settings.srcSel = settings.srcSel.filter(s => s !== id); settings.curTeacher = teachers[0].id;
+  saveQuestions(); saveSettings(); renderEditor(); renderMenu(); edMsg('Guru dihapus beserta soalnya.');
+});
+$('#bEdDone').addEventListener('click', () => {
+  cur().qs.forEach(q => { if (!q.o[q.a].trim()) q.a = Math.max(0, q.o.findIndex(o => o.trim())); });
+  cur().qs = validQs(cur().qs);
+  saveQuestions(); $('#editor').hidden = true; $('#menu').hidden = false; renderMenu();
+});
+
+/* ---------- Putaran utama ---------- */
+let last = performance.now();
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  const adv = G.paused ? 0 : dt;
+  G.t += adv;
+  if (G.mode === 'play' && !G.paused) update(dt);
+  drawBackdrop(ctx, G.t, adv);
+  if (G.mode !== 'menu') drawEntities(ctx);
+  drawForeground(ctx, G.t, adv);
+  if (G.mode === 'menu') drawPreviews(G.t);
+}
+window.addEventListener('resize', resize);
+resize(); renderMenu(); syncToggles();
+requestAnimationFrame(frame);
+
+})();
+</script>
+</body>
+</html>
